@@ -1,0 +1,6 @@
+livekit-agents[openai,deepgram,elevenlabs,silero]
+livekit-api
+python-dotenv
+supabase
+asyncpg
+python-dateutil 
