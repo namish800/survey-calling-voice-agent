@@ -425,15 +425,17 @@ async def entrypoint(ctx: agents.JobContext):
     # Create webhook client instance for transcript submission
     webhook_client = WebhookClient()
 
-    async def save_transcript():
+    session = None
+    userdata = None
+    survey_agent = None
+
+    async def save_transcript_and_survey_data():
         print("Saving conversation")
         
         try:
             # Get the transcript history
             transcript_history = session.history.to_dict()
             print("Raw transcript history:", transcript_history)
-            
-
             
             # Format transcript to markdown
             markdown_transcript = webhook_client.format_transcript_to_markdown(
@@ -469,7 +471,31 @@ async def entrypoint(ctx: agents.JobContext):
             logger.error(f"Error processing transcript: {e}")
             print(f"Error processing transcript: {e}")
 
-    ctx.add_shutdown_callback(save_transcript)   
+        # Save survey data
+        try:
+            if userdata and survey_agent:
+                # Set call end time if not already set
+                if userdata.call_end_time is None:
+                    userdata.call_end_time = time.time()
+                    
+                    # Create a mock context for the save_survey_data method
+                    class MockContext:
+                        def __init__(self, userdata):
+                            self.userdata = userdata
+                    
+                    mock_context = MockContext(userdata)
+                    
+                    # Save survey data using the agent's method
+                    await survey_agent.save_survey_data(mock_context)
+                    logger.info("Survey data saved on session shutdown")
+                else:
+                    logger.info("Survey data already saved, skipping duplicate save")
+                
+        except Exception as e:
+            logger.error(f"Error in shutdown callback: {e}")
+            print(f"Error in shutdown callback: {e}")       
+
+    ctx.add_shutdown_callback(save_transcript_and_survey_data)   
 
     # Parse metadata for customer info and survey config
     try:
@@ -523,9 +549,11 @@ async def entrypoint(ctx: agents.JobContext):
         userdata=userdata
     )
 
+    survey_agent = SurveyAgent(survey_config, customer_name, webhook_client)
+        
     await session.start(
         room=ctx.room,
-        agent=SurveyAgent(survey_config, customer_name, webhook_client),
+        agent=survey_agent,
         room_input_options=RoomInputOptions(
             # Enhanced noise cancellation for call quality
             noise_cancellation=noise_cancellation.BVCTelephony(), 
