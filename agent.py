@@ -264,6 +264,12 @@ class SurveyAgent(Agent):
         # Initialize webhook client
         self.webhook_client = webhook_client
 
+    async def on_enter(self):
+        await self.session.generate_reply(
+            instructions="You are talking to a customer who just joined the call and hasn't said anything yet. Greet the user with a warm welcome.",
+            allow_interruptions=False,
+    )
+
     @function_tool()
     async def handle_is_busy(self, context: RunContext[SurveyData], is_busy: bool = False, comments: Optional[str] = None) -> None:
         """Call this when the person indicates they're busy.
@@ -285,7 +291,7 @@ class SurveyAgent(Agent):
         
         Args:
             question_id: The ID of the question being answered
-            answer: The answer to the question (boolean for yes/no, int for ratings, string for text/multiple choice)
+            answer: The answer to the question
             comments: Optional additional comments about the answer.
             
         Returns:
@@ -295,29 +301,7 @@ class SurveyAgent(Agent):
         context.userdata.answers[question_id] = {"answer": answer}
         if comments:
             context.userdata.answers[question_id]["comments"] = comments
-        
-        # Update current question
-        context.userdata.current_question_id = question_id
-        
-        # Get the next question
-        config = context.userdata.survey_config
-        
-        # Get all question IDs in order
-        question_ids = list(config.questions.keys())
-        try:
-            current_index = question_ids.index(question_id)
-            if current_index + 1 < len(question_ids):
-                # Move to next question
-                next_id = question_ids[current_index + 1]
-                context.userdata.current_question_id = next_id
-                next_question = config.questions[next_id]
-                return f"Answer recorded. Next question ID: {next_id}. Ask: {next_question['text']}"
-            else:
-                # Survey is complete
-                return "Survey complete. Finishing the survey and ending call."
-        except ValueError:
-            # Question ID not found, survey complete
-            return "Survey complete. Finishing the survey and ending call."
+        return "Answer recorded"
 
     @function_tool()
     async def finish_survey(self, context: RunContext[SurveyData], comments: Optional[str] = None) -> None:
