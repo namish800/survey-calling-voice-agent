@@ -63,5 +63,5 @@ async def retrieve_chunk(msg: str):
 
     return result_str
 
-
-print(asyncio.run(retrieve_chunk("What is sarvam-m?")))
+if __name__ == "__main__":
+    print(asyncio.run(retrieve_chunk("What is sarvam-m?")))
