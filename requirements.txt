@@ -1,8 +1,41 @@
-livekit-agents[openai,deepgram,elevenlabs,silero]
-livekit-api
-python-dotenv
-supabase
-asyncpg
-python-dateutil 
+# LiveKit Configurable Agents Requirements
 
-kb-retriever @ file:///D:/work/AI/kb-management/dist/kb_retriever-0.1.1-py3-none-any.whl
+# Core LiveKit dependencies
+livekit-agents==1.0.1
+livekit-plugins-openai==0.9.2
+livekit-plugins-elevenlabs==0.6.3
+livekit-plugins-deepgram==0.8.2
+livekit-plugins-cartesia==0.2.2
+livekit-plugins-silero==0.6.2
+livekit-plugins-turn-detector==0.8.2
+
+# Optional noise cancellation
+livekit-plugins-noise-cancellation>=0.2.0
+
+# Environment and configuration
+python-dotenv>=1.0.0
+
+# HTTP client for API calls
+aiohttp>=3.9.0
+
+# Testing dependencies
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+pytest-cov
+
+# Development dependencies
+black>=23.0.0
+isort>=5.12.0
+flake8
+mypy
+
+# Optional: Enhanced logging
+structlog
+
+# Data validation (optional, for enhanced validation)
+pydantic
+
+# Existing knowledge retrieval system
+kb-retriever
+pinecone-client
+llama-index

@@ -1,0 +1,116 @@
+{
+  "agent_id": "sales_agent_template",
+  "name": "Sales Agent Template",
+  "description": "Template for sales and lead qualification agents",
+  "agent_type": "sales",
+  "version": "1.0",
+  "first_message": "Hi! I'm [AGENT_NAME] from [COMPANY_NAME]. I'm calling to discuss how we can help with [VALUE_PROPOSITION]. Do you have a few minutes to chat?",
+  "greeting_instructions": "Introduce yourself professionally, mention the company and value proposition, and ask if it's a good time to talk. Be respectful if they're busy.",
+  "system_instructions": "You are [AGENT_NAME], a professional sales representative from [COMPANY_NAME]. Your goal is to understand the prospect's needs and explain how your product/service can help them. Be consultative, not pushy. Listen actively and ask thoughtful questions to qualify leads.",
+  "personality_traits": {
+    "professional": true,
+    "consultative": true,
+    "enthusiastic": true,
+    "respectful": true
+  },
+  "conversation_style": "professional",
+  "llm_config": {
+    "provider": "openai",
+    "model": "gpt-4-turbo",
+    "temperature": 0.6,
+    "max_tokens": 600
+  },
+  "tts_config": {
+    "provider": "elevenlabs",
+    "voice_id": "pNInz6obpgDQGcFmaJgB",
+    "model": "eleven_flash_v2_5",
+    "language": "en",
+    "speed": 1.1
+  },
+  "stt_config": {
+    "provider": "deepgram",
+    "language": "en",
+    "model": "nova-2"
+  },
+  "rag_config": {
+    "enabled": true,
+    "provider": "pinecone",
+    "index_name": "sales_knowledge",
+    "similarity_threshold": 0.8,
+    "top_k": 3
+  },
+  "memory_config": {
+    "enabled": true,
+    "type": "user",
+    "max_history": 100,
+    "summarize_threshold": 200
+  },
+  "tools": [
+    {
+      "name": "qualify_lead",
+      "enabled": true,
+      "async_execution": false,
+      "description": "Qualify lead based on responses"
+    },
+    {
+      "name": "schedule_meeting",
+      "enabled": true,
+      "async_execution": true,
+      "continue_conversation": true,
+      "description": "Schedule follow-up meeting"
+    },
+    {
+      "name": "send_information",
+      "enabled": true,
+      "async_execution": true,
+      "continue_conversation": true,
+      "description": "Send product information to prospect"
+    },
+    {
+      "name": "end_call",
+      "enabled": true,
+      "async_execution": false,
+      "description": "End the call professionally"
+    }
+  ],
+  "completion_webhook": {
+    "url": "https://your-crm-endpoint.com/lead-interaction",
+    "headers": {
+      "Content-Type": "application/json",
+      "X-API-Key": "[CRM_API_KEY]"
+    },
+    "timeout": 45,
+    "retry_count": 3,
+    "enabled": true
+  },
+  "metrics_webhook": {
+    "url": "https://your-analytics-endpoint.com/sales-metrics",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "timeout": 30,
+    "enabled": true
+  },
+  "max_conversation_duration": 2400,
+  "silence_timeout": 8,
+  "interruption_handling": true,
+  "noise_cancellation": "BVC",
+  "agent_data": {
+    "sales_config": {
+      "company_name": "[COMPANY_NAME]",
+      "agent_name": "[AGENT_NAME]",
+      "product_name": "[PRODUCT_NAME]",
+      "value_proposition": "[VALUE_PROPOSITION]",
+      "qualification_criteria": {
+        "budget_range": "[BUDGET_RANGE]",
+        "decision_timeline": "[TIMELINE]",
+        "company_size": "[COMPANY_SIZE]"
+      },
+      "objection_handling": {
+        "price": "I understand price is important. Let me show you the ROI...",
+        "timing": "I hear you on timing. What would need to change for this to be a priority?",
+        "competition": "That's great you're evaluating options. What's most important to you in a solution?"
+      }
+    }
+  }
+} 
