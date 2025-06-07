@@ -18,7 +18,6 @@ logger = logging.getLogger(__name__)
 
 
 #TODO prepare instructions for agent
-#TODO add on_enter
 #TODO add tools
 class ConfigurableAgent(Agent):
     """A configurable LiveKit agent that loads behavior from configuration."""

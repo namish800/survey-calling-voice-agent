@@ -164,32 +164,6 @@ def create_room_input_options(config: AgentConfig) -> Optional[RoomInputOptions]
         logger.warning(f"Failed to create noise cancellation: {e}")
         return None
 
-#TODO: Move this to agent on_enter()
-async def handle_initial_greeting(session: AgentSession, agent: ConfigurableAgent) -> None:
-    """Handle initial greeting for the agent.
-    
-    Args:
-        session: AgentSession instance
-        agent: ConfigurableAgent instance
-    """
-    # Get first message or greeting instructions
-    first_message = agent.get_first_message()
-    greeting_instructions = agent.get_greeting_instructions()
-    
-    if first_message:
-        logger.info(f"Generating first message: {first_message}")
-        await session.generate_reply(instructions=f"Say: {first_message}")
-    elif greeting_instructions:
-        logger.info(f"Generating greeting with instructions: {greeting_instructions}")
-        await session.generate_reply(instructions=greeting_instructions)
-    else:
-        # Default greeting
-        logger.info("Generating default greeting")
-        await session.generate_reply(
-            instructions="Greet the user warmly and offer your assistance."
-        )
-
-
 def create_entrypoint(agent_id: str, 
                      config: Optional[AgentConfig] = None,
                      config_metadata: Optional[Dict[str, Any]] = None) -> Callable[[JobContext], None]:
