@@ -17,6 +17,9 @@ from ..components.factory import ComponentFactory, ComponentCreationError
 logger = logging.getLogger(__name__)
 
 
+#TODO prepare instructions for agent
+#TODO add on_enter
+#TODO add tools
 class ConfigurableAgent(Agent):
     """A configurable LiveKit agent that loads behavior from configuration."""
     
@@ -35,6 +38,30 @@ class ConfigurableAgent(Agent):
         logger.info(f"Initialized ConfigurableAgent: {config.name}")
         logger.info(f"Agent ID: {config.agent_id}")
         logger.info(f"Agent Type: {config.agent_type}")
+    
+    async def on_enter(self) -> None:
+        """Handle initial greeting for the agent.
+        
+        Args:
+            session: AgentSession instance
+            agent: ConfigurableAgent instance
+        """
+        # Get first message or greeting instructions
+        first_message = self.get_first_message()
+        greeting_instructions = self.get_greeting_instructions()
+        
+        if first_message:
+            logger.info(f"Generating first message: {first_message}")
+            await self.session.generate_reply(instructions=f"Say: {first_message}")
+        elif greeting_instructions:
+            logger.info(f"Generating greeting with instructions: {greeting_instructions}")
+            await self.session.generate_reply(instructions=greeting_instructions)
+        else:
+            # Default greeting
+            logger.info("Generating default greeting")
+            await self.session.generate_reply(
+                instructions="Greet the user warmly and offer your assistance."
+            )
     
     @property
     def agent_id(self) -> str:

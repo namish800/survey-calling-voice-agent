@@ -332,14 +332,6 @@ class HybridConfigurationLoader:
             logger.info(f"Loaded {agent_id} configuration from local file")
             return config
         
-        # Fall back to default configuration
-        config = self.local_loader.load_default_config()
-        if config:
-            logger.info(f"Loaded default configuration for {agent_id}")
-            # Update agent_id to match request
-            config.agent_id = agent_id
-            return config
-        
         logger.error(f"No configuration found for agent: {agent_id}")
         return None
     

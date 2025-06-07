@@ -11,14 +11,10 @@ from typing import Optional, Dict, Any, Callable
 
 from livekit import agents
 from livekit.agents import AgentSession, RoomInputOptions, JobContext
+from livekit.agents import BackgroundAudioPlayer, AudioConfig, BuiltinAudioClip
 
 # Import optional noise cancellation
-try:
-    from livekit.plugins import noise_cancellation
-    NOISE_CANCELLATION_AVAILABLE = True
-except ImportError:
-    NOISE_CANCELLATION_AVAILABLE = False
-    logging.warning("Noise cancellation plugin not available")
+from livekit.plugins import noise_cancellation
 
 from ..core.config import AgentConfig
 from ..core.config_loader import load_config_hybrid
@@ -45,19 +41,22 @@ async def configurable_agent_entrypoint(ctx: JobContext) -> None:
     await ctx.connect()
     metadata = json.loads(ctx.job.metadata) if ctx.job.metadata else {}
     # Load configuration
-    agent_id = metadata.get("agent_id", "survey_agent_v1")
+    agent_id = metadata.get("agent_id", "survey_agent")
     config = await load_config_hybrid(agent_id, metadata)
     
     if not config:
         logger.error(f"Failed to load configuration for agent: {agent_id}")
-        return
+        raise Exception(f"Failed to load configuration for agent: {agent_id}")
     
     logger.info(f"Loaded configuration for agent: {config.name}")
     
     # Create and start the agent session
     await start_agent_session(ctx, config)
 
-
+# TODO: Add shutdown hook for saving call data
+# TODO: Interface for metadata eg. to replace placeholders in instructions
+# TODO: Fetch data from webhook for agent config -- event interface for agent init and fetch data required by agent from webhook
+# TODO: setup context for agent(shared state)
 async def start_agent_session(ctx: JobContext, config: AgentConfig) -> None:
     """Start an agent session with the given configuration.
     
@@ -118,8 +117,14 @@ async def start_agent_session(ctx: JobContext, config: AgentConfig) -> None:
         
         logger.info("Agent session started successfully")
         
-        # Generate initial greeting if configured
-        await handle_initial_greeting(session, agent)
+            # Start background audio for better UX
+        background_audio = BackgroundAudioPlayer(
+            thinking_sound=[
+                AudioConfig(BuiltinAudioClip.KEYBOARD_TYPING, volume=0.8),
+                AudioConfig(BuiltinAudioClip.KEYBOARD_TYPING2, volume=0.7),
+            ],
+        )
+        await background_audio.start(room=ctx.room, agent_session=session)
         
     except ComponentCreationError as e:
         logger.error(f"Failed to create agent components: {e}")
@@ -138,9 +143,6 @@ def create_room_input_options(config: AgentConfig) -> Optional[RoomInputOptions]
     Returns:
         RoomInputOptions with noise cancellation or None
     """
-    if not NOISE_CANCELLATION_AVAILABLE:
-        logger.warning("Noise cancellation not available, skipping")
-        return None
     
     # Access noise cancellation directly from config property
     noise_cancellation_type = config.noise_cancellation
@@ -162,7 +164,7 @@ def create_room_input_options(config: AgentConfig) -> Optional[RoomInputOptions]
         logger.warning(f"Failed to create noise cancellation: {e}")
         return None
 
-
+#TODO: Move this to agent on_enter()
 async def handle_initial_greeting(session: AgentSession, agent: ConfigurableAgent) -> None:
     """Handle initial greeting for the agent.
     
