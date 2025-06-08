@@ -10,7 +10,6 @@ from src.agents.configurable_agent import ConfigurableAgent
 from src.agents.entrypoint import (
     create_entrypoint,
     create_room_input_options, 
-    handle_initial_greeting,
     start_agent_session
 )
 from src.core.config import AgentConfig, LLMConfig, TTSConfig, STTConfig
@@ -57,6 +56,14 @@ class TestConfigurableAgent:
         assert agent.description == "A test agent for unit testing"
         assert agent.config == sample_config
         assert agent.factory is not None
+        assert agent.additional_context == {}
+    
+    def test_agent_initialization_with_context(self, sample_config):
+        """Test agent initialization with additional context."""
+        context = {"available_tools": [{"name": "test_tool", "description": "Test tool"}]}
+        agent = ConfigurableAgent(sample_config, context)
+        
+        assert agent.additional_context == context
     
     def test_agent_properties(self, sample_config):
         """Test agent property accessors."""
@@ -80,40 +87,78 @@ class TestConfigurableAgent:
         assert agent.get_noise_cancellation_type() == "BVC"  # Default
     
     def test_chat_context_creation(self, sample_config):
-        """Test chat context creation with system instructions."""
+        """Test chat context creation."""
         agent = ConfigurableAgent(sample_config)
         context = agent.create_chat_context()
         
-        # Should have system instructions
+        # Should have context object
         assert context is not None
-        # Check for correct ChatContext attributes - it has 'items' not 'messages'
+        # Check for correct ChatContext attributes
         assert hasattr(context, 'items')
         # Verify we can access the items
         items = context.items
         assert isinstance(items, list)
     
-    def test_personality_prompt_building(self, sample_config):
-        """Test personality prompt building."""
+    def test_instruction_generation(self, sample_config):
+        """Test instruction generation from configuration."""
         agent = ConfigurableAgent(sample_config)
-        personality_prompt = agent._build_personality_prompt()
+        instructions = agent.get_generated_instructions()
         
-        assert "professional" in personality_prompt.lower()
-        assert "helpful" in personality_prompt.lower()
-        assert "friendly" in personality_prompt.lower()
+        # Should have generated comprehensive instructions
+        assert instructions is not None
+        assert len(instructions) > 0
+        assert "Test Agent" in instructions
+        assert "assistant" in instructions.lower()
     
-    def test_survey_context_building(self, sample_config):
-        """Test survey-specific context building."""
-        sample_config.agent_type = "survey"
+    def test_context_updates(self, sample_config):
+        """Test updating agent context."""
         agent = ConfigurableAgent(sample_config)
         
-        survey_config = sample_config.agent_data["survey_config"]
-        context = agent._build_survey_context(survey_config)
+        initial_instructions = agent.get_generated_instructions()
+        initial_length = len(initial_instructions)
         
-        assert "Test Company" in context
-        assert "Test survey" in context
+        # Update context with tools
+        agent.update_context({
+            "available_tools": [
+                {"name": "test_tool", "description": "A test tool"}
+            ]
+        })
+        
+        updated_instructions = agent.get_generated_instructions()
+        
+        # Instructions should have been updated
+        assert len(updated_instructions) != initial_length
+        assert agent.additional_context["available_tools"][0]["name"] == "test_tool"
     
-    def test_sales_context_building(self):
-        """Test sales-specific context building."""
+    def test_survey_agent_context(self):
+        """Test survey-specific context generation."""
+        config = AgentConfig(
+            agent_id="survey_test",
+            name="Survey Agent",
+            description="Test survey agent",
+            agent_type="survey",
+            system_instructions="You are a survey agent.",
+            llm_config=LLMConfig(provider="openai", model="gpt-4"),
+            agent_data={
+                "survey_config": {
+                    "company_name": "Test Company",
+                    "survey_goal": "Test survey",
+                    "questions": [
+                        {"question_id": "q1", "text": "How are you?", "type": "open_text"}
+                    ]
+                }
+            }
+        )
+        
+        agent = ConfigurableAgent(config)
+        instructions = agent.get_generated_instructions()
+        
+        # Should contain survey-specific content
+        assert "survey" in instructions.lower()
+        assert "Test Company" in instructions
+    
+    def test_sales_agent_context(self):
+        """Test sales-specific context generation."""
         config = AgentConfig(
             agent_id="sales_test",
             name="Sales Agent",
@@ -135,13 +180,12 @@ class TestConfigurableAgent:
         )
         
         agent = ConfigurableAgent(config)
-        sales_config = config.agent_data["sales_config"]
-        context = agent._build_sales_context(sales_config)
+        instructions = agent.get_generated_instructions()
         
-        assert "Sales Corp" in context
-        assert "Amazing Product" in context
-        assert "Saves time and money" in context
-        assert "budget" in context.lower()
+        # Should contain sales-specific content
+        assert "sales" in instructions.lower()
+        assert "Sales Corp" in instructions
+        assert "Amazing Product" in instructions
     
     def test_agent_string_representation(self, sample_config):
         """Test agent string representations."""
@@ -194,80 +238,25 @@ class TestEntrypointFunctions:
     
     def test_create_room_input_options_with_bvc(self, sample_config):
         """Test room input options creation with BVC."""
-        with patch('src.agents.entrypoint.NOISE_CANCELLATION_AVAILABLE', True):
-            with patch('src.agents.entrypoint.noise_cancellation') as mock_nc:
-                mock_nc.BVC.return_value = Mock()
-                
-                options = create_room_input_options(sample_config)
-                
-                assert options is not None
-                mock_nc.BVC.assert_called_once()
+        with patch('src.agents.entrypoint.noise_cancellation') as mock_nc:
+            mock_nc.BVC.return_value = Mock()
+            
+            options = create_room_input_options(sample_config)
+            
+            assert options is not None
+            mock_nc.BVC.assert_called_once()
     
     def test_create_room_input_options_with_bvc_telephony(self, sample_config):
         """Test room input options creation with BVC Telephony."""
         sample_config.noise_cancellation = "BVCTelephony"
         
-        with patch('src.agents.entrypoint.NOISE_CANCELLATION_AVAILABLE', True):
-            with patch('src.agents.entrypoint.noise_cancellation') as mock_nc:
-                mock_nc.BVCTelephony.return_value = Mock()
-                
-                options = create_room_input_options(sample_config)
-                
-                assert options is not None
-                mock_nc.BVCTelephony.assert_called_once()
-    
-    def test_create_room_input_options_unavailable(self, sample_config):
-        """Test room input options when noise cancellation unavailable."""
-        with patch('src.agents.entrypoint.NOISE_CANCELLATION_AVAILABLE', False):
+        with patch('src.agents.entrypoint.noise_cancellation') as mock_nc:
+            mock_nc.BVCTelephony.return_value = Mock()
+            
             options = create_room_input_options(sample_config)
-            assert options is None
-    
-    @pytest.mark.asyncio
-    async def test_handle_initial_greeting_with_first_message(self, sample_config):
-        """Test initial greeting handling with first message."""
-        sample_config.first_message = "Hello, welcome!"
-        agent = ConfigurableAgent(sample_config)
-        
-        mock_session = Mock()
-        mock_session.generate_reply = AsyncMock()
-        
-        await handle_initial_greeting(mock_session, agent)
-        
-        mock_session.generate_reply.assert_called_once()
-        call_args = mock_session.generate_reply.call_args[1]
-        assert "Say: Hello, welcome!" in call_args["instructions"]
-    
-    @pytest.mark.asyncio
-    async def test_handle_initial_greeting_with_greeting_instructions(self, sample_config):
-        """Test initial greeting handling with greeting instructions."""
-        sample_config.first_message = None
-        sample_config.greeting_instructions = "Greet warmly and ask how you can help"
-        agent = ConfigurableAgent(sample_config)
-        
-        mock_session = Mock()
-        mock_session.generate_reply = AsyncMock()
-        
-        await handle_initial_greeting(mock_session, agent)
-        
-        mock_session.generate_reply.assert_called_once()
-        call_args = mock_session.generate_reply.call_args[1]
-        assert "Greet warmly and ask how you can help" in call_args["instructions"]
-    
-    @pytest.mark.asyncio
-    async def test_handle_initial_greeting_default(self, sample_config):
-        """Test initial greeting handling with default greeting."""
-        sample_config.first_message = None
-        sample_config.greeting_instructions = None
-        agent = ConfigurableAgent(sample_config)
-        
-        mock_session = Mock()
-        mock_session.generate_reply = AsyncMock()
-        
-        await handle_initial_greeting(mock_session, agent)
-        
-        mock_session.generate_reply.assert_called_once()
-        call_args = mock_session.generate_reply.call_args[1]
-        assert "Greet the user warmly" in call_args["instructions"]
+            
+            assert options is not None
+            mock_nc.BVCTelephony.assert_called_once()
 
 
 class TestSessionIntegration:
@@ -324,9 +313,11 @@ class TestSessionIntegration:
                 mock_session.start = AsyncMock()
                 mock_session_class.return_value = mock_session
                 
-                # Mock greeting handling
-                with patch('src.agents.entrypoint.handle_initial_greeting') as mock_greeting:
-                    mock_greeting.return_value = AsyncMock()
+                # Mock BackgroundAudioPlayer
+                with patch('src.agents.entrypoint.BackgroundAudioPlayer') as mock_bg_audio:
+                    mock_bg_audio_instance = Mock()
+                    mock_bg_audio_instance.start = AsyncMock()
+                    mock_bg_audio.return_value = mock_bg_audio_instance
                     
                     # Call the function
                     await start_agent_session(mock_job_context, sample_config)
@@ -341,9 +332,6 @@ class TestSessionIntegration:
                     # Verify session was created and started
                     mock_session_class.assert_called_once()
                     mock_session.start.assert_called_once()
-                    
-                    # Verify greeting was handled
-                    mock_greeting.assert_called_once()
 
 
 if __name__ == "__main__":

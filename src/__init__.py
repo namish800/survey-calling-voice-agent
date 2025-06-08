@@ -2,37 +2,49 @@
 LiveKit Configurable Agents
 
 A flexible, configuration-driven voice AI agent system built on LiveKit.
+This package provides tools for creating, configuring, and deploying
+intelligent voice agents with minimal code.
 """
 
-from .core.config import AgentConfig, LLMConfig, TTSConfig, STTConfig
-from .core.config_loader import load_config_hybrid, load_config_by_id
-from .components.factory import ComponentFactory
-from .agents.configurable_agent import ConfigurableAgent
-from .agents.entrypoint import (
-    configurable_agent_entrypoint,
+# Core configuration and utilities
+from .core import (
+    AgentConfig,
+    LLMConfig,
+    TTSConfig,
+    STTConfig,
+    ConfigurationLoader,
+    generate_system_instructions,
+)
+
+# Agent implementations
+from .agents import (
+    ConfigurableAgent,
     create_entrypoint,
-    run_configurable_agent,
-    run_universal_agent
+)
+
+# Component factories
+from .components import (
+    ComponentFactory,
 )
 
 __version__ = "1.0.0"
-__author__ = "LiveKit Configurable Agents Team"
 
 __all__ = [
     # Core configuration
     "AgentConfig",
-    "LLMConfig", 
-    "TTSConfig",
+    "LLMConfig",
+    "TTSConfig", 
     "STTConfig",
-    "load_config_hybrid",
-    "load_config_by_id",
-    # Component factory
-    "ComponentFactory",
-    # Configurable agent
+    "ConfigurationLoader",
+    "generate_system_instructions",
+    
+    # Agents
     "ConfigurableAgent",
-    # Entrypoints and runners
-    "configurable_agent_entrypoint",
     "create_entrypoint",
-    "run_configurable_agent",
-    "run_universal_agent",
-] 
+    
+    # Components
+    "ComponentFactory",
+    
+    # Package info
+    "__version__",
+]
