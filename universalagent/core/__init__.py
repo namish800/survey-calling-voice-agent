@@ -38,7 +38,6 @@ from .config_loader import (
 from .instruction_template import (
     InstructionTemplate,
     generate_system_instructions,
-    preview_instructions,
     render_instructions_with_data,
 )
 
@@ -73,7 +72,5 @@ __all__ = [
     # Instruction templates
     "InstructionTemplate",
     "generate_system_instructions",
-    "preview_instructions",
     "render_instructions_with_data",
 ]
-

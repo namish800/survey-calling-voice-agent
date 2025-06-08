@@ -219,8 +219,8 @@ class AgentConfig:
     first_message: Optional[str] = None
     greeting_instructions: Optional[str] = None
     system_instructions: str = ""
-    personality_traits: Dict[str, Any] = field(default_factory=dict)
-    conversation_style: str = "professional"  # "casual", "formal", "empathetic"
+    guardrails: str = ""
+    initial_context: str = ""
     
     # AI Component Configuration
     tts_config: Optional[TTSConfig] = None
@@ -248,7 +248,6 @@ class AgentConfig:
     noise_cancellation: str = "BVC"
     
     # Agent-specific Data
-    agent_data: Dict[str, Any] = field(default_factory=dict)
     metadata: Dict[str, Any] = field(default_factory=dict)
     
     def __post_init__(self):
@@ -345,8 +344,8 @@ class AgentConfig:
             first_message=data.get("first_message"),
             greeting_instructions=data.get("greeting_instructions"),
             system_instructions=data.get("system_instructions", ""),
-            personality_traits=data.get("personality_traits", {}),
-            conversation_style=data.get("conversation_style", "professional"),
+            guardrails=data.get("guardrails", ""),
+            initial_context=data.get("initial_context", ""),
             tts_config=tts_config,
             stt_config=stt_config,
             vad_config=data.get("vad_config", {}),
@@ -362,8 +361,6 @@ class AgentConfig:
             silence_timeout=data.get("silence_timeout"),
             interruption_handling=data.get("interruption_handling", True),
             noise_cancellation=data.get("noise_cancellation", "BVC"),
-            agent_data=data.get("agent_data", {}),
-            metadata=data.get("metadata", {}),
         )
     
     @classmethod

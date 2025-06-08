@@ -41,7 +41,9 @@ async def configurable_agent_entrypoint(ctx: JobContext) -> None:
     await ctx.connect()
     metadata = json.loads(ctx.job.metadata) if ctx.job.metadata else {}
     # Load configuration
-    agent_id = metadata.get("agent_id", "survey_agent")
+    agent_id = metadata.get("agent_id", "default")
+    agent_data = metadata.get("agent_data", None)
+
     config = await load_config_hybrid(agent_id, metadata)
     
     if not config:
@@ -51,13 +53,13 @@ async def configurable_agent_entrypoint(ctx: JobContext) -> None:
     logger.info(f"Loaded configuration for agent: {config.name}")
     
     # Create and start the agent session
-    await start_agent_session(ctx, config)
+    await start_agent_session(ctx, config, agent_data)
 
 # TODO: Add shutdown hook for saving call data
 # TODO: Interface for metadata eg. to replace placeholders in instructions
 # TODO: Fetch data from webhook for agent config -- event interface for agent init and fetch data required by agent from webhook
 # TODO: setup context for agent(shared state)
-async def start_agent_session(ctx: JobContext, config: AgentConfig) -> None:
+async def start_agent_session(ctx: JobContext, config: AgentConfig, agent_data: Optional[Dict[str, Any]] = None) -> None:
     """Start an agent session with the given configuration.
     
     Args:
@@ -93,7 +95,7 @@ async def start_agent_session(ctx: JobContext, config: AgentConfig) -> None:
         logger.info("Created turn detection")
         
         # Create configurable agent
-        agent = ConfigurableAgent(config)
+        agent = ConfigurableAgent(config, runtime_metadata=agent_data)
         logger.info(f"Created agent: {agent}")
         
         # Create AgentSession
@@ -178,5 +180,6 @@ def create_worker_options(entrypoint_func: Optional[Callable] = None) -> agents.
     
     return agents.WorkerOptions(
         entrypoint_fnc=entrypoint,
+        agent_name="base_agent",
         # Additional worker options can be added here
     )

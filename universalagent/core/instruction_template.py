@@ -79,28 +79,10 @@ class InstructionTemplate:
         """
         context = {
             # Basic agent information
-            "name": config.name or "Assistant",
-            "description": config.description,
-            "agent_type": config.agent_type,
-            "system_instructions": config.system_instructions,
-            
-            # Personality and style
-            "personality_traits": self._format_personality_traits(config.personality_traits),
-            "conversation_style": config.conversation_style,
-            
-            # Configuration settings
-            "max_conversation_duration": config.max_conversation_duration,
-            "silence_timeout": config.silence_timeout,
-            "interruption_handling": config.interruption_handling,
-            
-            # Agent data (for placeholder replacement)
-            "agent_data": config.agent_data or {},
-            
-            # Tools from additional context
+            "user_instructions": config.system_instructions,
+            "guardrails": config.guardrails,
+            "context": config.initial_context,
             "tools": additional_context.get("available_tools", []) if additional_context else [],
-            
-            # Metadata
-            "metadata": config.metadata or {}
         }
         
         # Add any additional context items
@@ -157,7 +139,8 @@ If you encounter limitations, acknowledge them transparently and suggest alterna
 
 def generate_system_instructions(config: AgentConfig, 
                                additional_context: Optional[Dict[str, Any]] = None,
-                               template_dir: Optional[str] = None) -> str:
+                               template_dir: Optional[str] = None, 
+                               runtime_metada: Optional[Dict[str, Any]] = None) -> str:
     """Generate system instructions for an agent configuration.
     
     Args:
@@ -169,7 +152,10 @@ def generate_system_instructions(config: AgentConfig,
         Generated system instructions string
     """
     template = InstructionTemplate(template_dir)
-    return template.generate_instructions(config, additional_context)
+    instructions = template.generate_instructions(config, additional_context)
+    if runtime_metada:
+        return render_instructions_with_data(instructions, runtime_metada)
+    return instructions
 
 #TODO: add this to the agent class if required or delete
 def render_instructions_with_data(template_string: str, agent_data: Dict[str, Any]) -> str:

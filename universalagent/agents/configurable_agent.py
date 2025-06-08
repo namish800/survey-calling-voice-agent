@@ -12,7 +12,7 @@ from livekit.agents import Agent
 from livekit.agents import llm
 
 from universalagent.core.config import AgentConfig
-from universalagent.core.instruction_template import generate_system_instructions
+from universalagent.core.instruction_template import generate_system_instructions, render_instructions_with_data
 from universalagent.components.factory import ComponentFactory, ComponentCreationError
 
 logger = logging.getLogger(__name__)
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 class ConfigurableAgent(Agent):
     """A configurable LiveKit agent that loads behavior from configuration."""
     
-    def __init__(self, config: AgentConfig, additional_context: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: AgentConfig, runtime_metadata: Optional[Dict[str, Any]] = None, additional_context: Optional[Dict[str, Any]] = None):
         """Initialize the configurable agent.
         
         Args:
@@ -35,8 +35,8 @@ class ConfigurableAgent(Agent):
         self.factory = ComponentFactory()
         
         # Generate comprehensive system instructions using the template
-        instructions = generate_system_instructions(config, self.additional_context)
-        
+        instructions = generate_system_instructions(config, self.additional_context, runtime_metada=runtime_metadata)
+
         # Initialize the base Agent with generated instructions
         super().__init__(instructions=instructions)
         
@@ -48,8 +48,8 @@ class ConfigurableAgent(Agent):
     async def on_enter(self) -> None:
         """Handle initial greeting for the agent."""
         # Get first message or greeting instructions
-        first_message = self.get_first_message()
-        greeting_instructions = self.get_greeting_instructions()
+        first_message = self.config.first_message
+        greeting_instructions = self.config.greeting_instructions
         
         if first_message:
             logger.info(f"Generating first message: {first_message}")
@@ -66,9 +66,9 @@ class ConfigurableAgent(Agent):
 
     def __str__(self) -> str:
         """String representation of the agent."""
-        return f"ConfigurableAgent(id={self.config.agent_id}, name={self.config.agent_name}, type={self.config.agent_type})"
+        return f"ConfigurableAgent(id={self.config.agent_id}, name={self.config.name}, type={self.config.agent_type})"
     
     def __repr__(self) -> str:
         """Detailed string representation of the agent."""
-        return (f"ConfigurableAgent(id='{self.config.agent_id}', name='{self.config.agent_name}', "
+        return (f"ConfigurableAgent(id='{self.config.agent_id}', name='{self.config.name}', "
                 f"type='{self.config.agent_type}', description='{self.config.description}')") 

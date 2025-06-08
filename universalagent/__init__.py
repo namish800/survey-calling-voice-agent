@@ -18,7 +18,6 @@ from .core import (
 # Agent implementations
 from .agents import (
     ConfigurableAgent,
-    create_entrypoint,
 )
 
 # Component factories
