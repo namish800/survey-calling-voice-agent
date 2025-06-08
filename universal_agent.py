@@ -1,4 +1,4 @@
-from src.agents.entrypoint import create_worker_options
+from universalagent.agents.entrypoint import create_worker_options
 from livekit import agents
 
 if __name__ == "__main__":

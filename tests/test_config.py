@@ -8,7 +8,7 @@ import tempfile
 import os
 from pathlib import Path
 
-from src.core.config import (
+from universalagent.core.config import (
     AgentConfig,
     LLMConfig,
     TTSConfig,
@@ -22,7 +22,7 @@ from src.core.config import (
     TTSProvider,
     STTProvider,
 )
-from src.core.config_loader import ConfigurationLoader, load_config_from_file
+from universalagent.core.config_loader import ConfigurationLoader, load_config_from_file
 
 
 class TestLLMConfig:

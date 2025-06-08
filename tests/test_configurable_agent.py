@@ -6,13 +6,13 @@ import pytest
 from unittest.mock import Mock, patch, AsyncMock
 import asyncio
 
-from src.agents.configurable_agent import ConfigurableAgent
-from src.agents.entrypoint import (
+from universalagent.agents.configurable_agent import ConfigurableAgent
+from universalagent.agents.entrypoint import (
     create_entrypoint,
     create_room_input_options, 
     start_agent_session
 )
-from src.core.config import AgentConfig, LLMConfig, TTSConfig, STTConfig
+from universalagent.core.config import AgentConfig, LLMConfig, TTSConfig, STTConfig
 
 
 class TestConfigurableAgent:

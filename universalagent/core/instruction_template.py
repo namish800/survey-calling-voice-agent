@@ -171,28 +171,7 @@ def generate_system_instructions(config: AgentConfig,
     template = InstructionTemplate(template_dir)
     return template.generate_instructions(config, additional_context)
 
-
-def preview_instructions(config: AgentConfig, 
-                        additional_context: Optional[Dict[str, Any]] = None,
-                        template_dir: Optional[str] = None) -> None:
-    """Preview generated instructions (useful for development/testing).
-    
-    Args:
-        config: Agent configuration object
-        additional_context: Optional additional context
-        template_dir: Optional custom template directory
-    """
-    instructions = generate_system_instructions(config, additional_context, template_dir)
-    
-    print("=" * 80)
-    print(f"SYSTEM INSTRUCTIONS PREVIEW: {config.name}")
-    print("=" * 80)
-    print(instructions)
-    print("=" * 80)
-    print(f"Total length: {len(instructions)} characters")
-    print("=" * 80)
-
-
+#TODO: add this to the agent class if required or delete
 def render_instructions_with_data(template_string: str, agent_data: Dict[str, Any]) -> str:
     """Render instruction template string with agent data placeholders.
     

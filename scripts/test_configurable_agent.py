@@ -15,10 +15,10 @@ from unittest.mock import Mock, AsyncMock, patch
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.core.config_loader import load_config_by_id, load_config_from_file
-from src.components.factory import ComponentFactory, ComponentCreationError
-from src.agents.configurable_agent import ConfigurableAgent
-from src.agents.entrypoint import (
+from universalagent.core.config_loader import load_config_by_id, load_config_from_file
+from universalagent.components.factory import ComponentFactory, ComponentCreationError
+from universalagent.agents.configurable_agent import ConfigurableAgent
+from universalagent.agents.entrypoint import (
     create_entrypoint,
     create_room_input_options,
     handle_initial_greeting,

@@ -14,9 +14,9 @@ from pathlib import Path
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.components.factory import ComponentFactory, ComponentCreationError
-from src.core.config_loader import load_config_by_id, load_config_from_file
-from src.core.config import LLMConfig, TTSConfig, STTConfig
+from universalagent.components.factory import ComponentFactory, ComponentCreationError
+from universalagent.core.config_loader import load_config_by_id, load_config_from_file
+from universalagent.core.config import LLMConfig, TTSConfig, STTConfig
 
 
 def test_component_creation_from_config(config_file: str) -> bool:

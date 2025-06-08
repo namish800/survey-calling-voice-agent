@@ -14,7 +14,7 @@ from pathlib import Path
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.core.config_loader import HybridConfigurationLoader, ConfigurationLoader
+from universalagent.core.config_loader import HybridConfigurationLoader, ConfigurationLoader
 
 
 def validate_environment_configs(environment: str) -> bool:

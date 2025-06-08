@@ -5,8 +5,8 @@ Tests for the component factory module.
 import pytest
 from unittest.mock import Mock, patch, MagicMock
 
-from src.components.factory import ComponentFactory, ComponentCreationError
-from src.core.config import LLMConfig, TTSConfig, STTConfig
+from universalagent.components.factory import ComponentFactory, ComponentCreationError
+from universalagent.core.config import LLMConfig, TTSConfig, STTConfig
 
 
 class TestComponentFactory:

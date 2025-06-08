@@ -164,46 +164,6 @@ def create_room_input_options(config: AgentConfig) -> Optional[RoomInputOptions]
         logger.warning(f"Failed to create noise cancellation: {e}")
         return None
 
-def create_entrypoint(agent_id: str, 
-                     config: Optional[AgentConfig] = None,
-                     config_metadata: Optional[Dict[str, Any]] = None) -> Callable[[JobContext], None]:
-    """Create a custom entrypoint for a specific agent configuration.
-    
-    This is useful when you want to create an entrypoint for a specific agent
-    rather than using the universal configurable_agent_entrypoint.
-    
-    Args:
-        agent_id: ID of the agent configuration to load
-        config: Pre-loaded agent configuration (optional)
-        config_metadata: Additional metadata for configuration loading
-        
-    Returns:
-        Entrypoint function for the agent
-    """
-    async def custom_entrypoint(ctx: JobContext) -> None:
-        """Custom entrypoint for specific agent configuration."""
-        logger.info(f"Starting custom entrypoint for agent: {agent_id}")
-        
-        # Connect to the room
-        await ctx.connect()
-        
-        # Use provided config or load it
-        agent_config = config
-        if not agent_config:
-            metadata = {**(config_metadata or {}), **ctx.job.metadata}
-            agent_config = await load_config_hybrid(agent_id, metadata)
-        
-        if not agent_config:
-            logger.error(f"Failed to load configuration for agent: {agent_id}")
-            return
-        
-        logger.info(f"Loaded configuration for agent: {agent_config.name}")
-        
-        # Start the agent session
-        await start_agent_session(ctx, agent_config)
-    
-    return custom_entrypoint
-
 
 def create_worker_options(entrypoint_func: Optional[Callable] = None) -> agents.WorkerOptions:
     """Create WorkerOptions for running the configurable agent.
@@ -220,34 +180,3 @@ def create_worker_options(entrypoint_func: Optional[Callable] = None) -> agents.
         entrypoint_fnc=entrypoint,
         # Additional worker options can be added here
     )
-
-
-# Convenience functions for common use cases
-
-def run_configurable_agent(agent_id: str = "default", 
-                          config: Optional[AgentConfig] = None) -> None:
-    """Run a configurable agent with the CLI.
-    
-    This is a convenience function that sets up everything needed to run
-    a configurable agent from the command line.
-    
-    Args:
-        agent_id: ID of the agent configuration to load
-        config: Pre-loaded agent configuration (optional)
-    """
-    if config:
-        entrypoint = create_entrypoint(agent_id, config)
-    else:
-        entrypoint = create_entrypoint(agent_id)
-    
-    worker_options = create_worker_options(entrypoint)
-    agents.cli.run_app(worker_options)
-
-
-def run_universal_agent() -> None:
-    """Run the universal configurable agent.
-    
-    This agent loads its configuration based on metadata passed in the job.
-    """
-    worker_options = create_worker_options()
-    agents.cli.run_app(worker_options) 
