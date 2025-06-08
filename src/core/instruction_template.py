@@ -10,7 +10,7 @@ from typing import Dict, Any, Optional, List
 from pathlib import Path
 import jinja2
 
-from ..core.config import AgentConfig
+from core.config import AgentConfig
 
 logger = logging.getLogger(__name__)
 

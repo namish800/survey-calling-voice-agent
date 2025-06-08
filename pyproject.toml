@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "livekit-configurable-agents"
+version = "1.0.0"
+description = "A flexible, configuration-driven voice AI agent system built on LiveKit"
+authors = [{name = "Your Name", email = "your.email@example.com"}]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "livekit-agents>=0.10.0",
+    "livekit-plugins-openai>=0.9.0",
+    "livekit-plugins-elevenlabs>=0.6.0",
+    "livekit-plugins-deepgram>=0.5.0",
+    "livekit-plugins-cartesia>=0.2.0",
+    "livekit-plugins-silero>=0.6.0",
+    "livekit-plugins-turn-detector>=0.8.0",
+    "livekit-plugins-noise-cancellation>=0.2.0",
+    "python-dotenv>=1.0.0",
+    "pydantic>=2.0.0",
+    "pyyaml>=6.0.0",
+    "aiofiles>=23.0.0",
+    "jinja2>=3.1.0",
+    "httpx>=0.24.0",
+    "structlog",
+    "kb-retriever",
+    "pinecone-client",
+    "llama-index",
+    "anthropic>=0.25.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-mock>=3.10.0",
+    "pytest-cov",
+    "black",
+    "flake8",
+    "mypy",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.black]
+line-length = 100
+target-version = ['py39']
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"] 
