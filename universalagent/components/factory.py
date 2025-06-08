@@ -34,7 +34,7 @@ except ImportError:
     ANTHROPIC_AVAILABLE = False
     logging.warning("Anthropic plugin not available")
 
-from core.config import LLMConfig, TTSConfig, STTConfig
+from universalagent.core.config import LLMConfig, TTSConfig, STTConfig
 
 logger = logging.getLogger(__name__)
 

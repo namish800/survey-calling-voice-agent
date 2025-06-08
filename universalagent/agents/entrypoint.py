@@ -16,10 +16,10 @@ from livekit.agents import BackgroundAudioPlayer, AudioConfig, BuiltinAudioClip
 # Import optional noise cancellation
 from livekit.plugins import noise_cancellation
 
-from core.config import AgentConfig
-from core.config_loader import load_config_hybrid
-from components.factory import ComponentFactory, ComponentCreationError
-from agents.configurable_agent import ConfigurableAgent
+from universalagent.core.config import AgentConfig
+from universalagent.core.config_loader import load_config_hybrid
+from universalagent.components.factory import ComponentFactory, ComponentCreationError
+from universalagent.agents.configurable_agent import ConfigurableAgent
 
 logger = logging.getLogger(__name__)
 

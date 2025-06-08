@@ -11,9 +11,9 @@ from typing import Optional, Dict, Any
 from livekit.agents import Agent
 from livekit.agents import llm
 
-from core.config import AgentConfig
-from core.instruction_template import generate_system_instructions
-from components.factory import ComponentFactory, ComponentCreationError
+from universalagent.core.config import AgentConfig
+from universalagent.core.instruction_template import generate_system_instructions
+from universalagent.components.factory import ComponentFactory, ComponentCreationError
 
 logger = logging.getLogger(__name__)
 
