@@ -320,13 +320,6 @@ pytest --cov=universalagent
 pytest tests/test_config.py
 ```
 
-## 📚 Documentation
-
-- [Instruction Template Guide](docs/INSTRUCTION_TEMPLATE_GUIDE.md) - Dynamic instruction generation
-- [Prompting Guide](docs/prompting_guide.md) - Best practices for agent prompting
-- [Project Structure](docs/project-structure.md) - Detailed architecture overview
-- [Implementation Plan](docs/IMPLEMENTATION_PLAN.md) - Development roadmap and progress
-
 ## 🚀 Development Status
 
 ### ✅ Phase 1 Complete: Core Foundation
