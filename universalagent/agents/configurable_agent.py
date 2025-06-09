@@ -6,7 +6,7 @@ from our configuration objects, integrating with the LiveKit AgentSession.
 """
 
 import logging
-from typing import Optional, Dict, Any
+from typing import List, Optional, Dict, Any
 
 from livekit.agents import Agent
 from livekit.agents import llm
@@ -14,6 +14,7 @@ from livekit.agents import llm
 from universalagent.core.config import AgentConfig
 from universalagent.core.instruction_template import generate_system_instructions, render_instructions_with_data
 from universalagent.components.factory import ComponentFactory, ComponentCreationError
+from universalagent.tools.tool_holder import ToolHolder
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +24,10 @@ logger = logging.getLogger(__name__)
 class ConfigurableAgent(Agent):
     """A configurable LiveKit agent that loads behavior from configuration."""
     
-    def __init__(self, config: AgentConfig, runtime_metadata: Optional[Dict[str, Any]] = None, additional_context: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: AgentConfig,
+                runtime_metadata: Optional[Dict[str, Any]] = None,
+                additional_context: Optional[Dict[str, Any]] = None,
+                tools: Optional[List[ToolHolder]] = None):
         """Initialize the configurable agent.
         
         Args:
@@ -33,12 +37,13 @@ class ConfigurableAgent(Agent):
         self.config = config
         self.additional_context = additional_context or {}
         self.factory = ComponentFactory()
-        
+        livekit_tools = [tool.livekit_tool for tool in tools]
+
         # Generate comprehensive system instructions using the template
         instructions = generate_system_instructions(config, self.additional_context, runtime_metada=runtime_metadata)
 
-        # Initialize the base Agent with generated instructions
-        super().__init__(instructions=instructions)
+        # Initialize the base Agent with generated instructions and tools
+        super().__init__(instructions=instructions, tools=livekit_tools)
         
         logger.info(f"Initialized ConfigurableAgent: {config.name}")
         logger.info(f"Agent ID: {config.agent_id}")

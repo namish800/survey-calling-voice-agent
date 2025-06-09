@@ -20,6 +20,7 @@ from universalagent.core.config import AgentConfig
 from universalagent.core.config_loader import load_config_hybrid
 from universalagent.components.factory import ComponentFactory, ComponentCreationError
 from universalagent.agents.configurable_agent import ConfigurableAgent
+from universalagent.tools.call_management_tools import BUILT_IN_TOOLS
 
 logger = logging.getLogger(__name__)
 
@@ -94,8 +95,9 @@ async def start_agent_session(ctx: JobContext, config: AgentConfig, agent_data: 
         turn_detection = factory.create_turn_detection(config.turn_detection_config)
         logger.info("Created turn detection")
         
+        tools = list(BUILT_IN_TOOLS.values())
         # Create configurable agent
-        agent = ConfigurableAgent(config, runtime_metadata=agent_data)
+        agent = ConfigurableAgent(config, runtime_metadata=agent_data, tools=tools)
         logger.info(f"Created agent: {agent}")
         
         # Create AgentSession
@@ -126,7 +128,16 @@ async def start_agent_session(ctx: JobContext, config: AgentConfig, agent_data: 
                 AudioConfig(BuiltinAudioClip.KEYBOARD_TYPING2, volume=0.7),
             ],
         )
-        await background_audio.start(room=ctx.room, agent_session=session)
+
+        try:
+            await background_audio.start(room=ctx.room, agent_session=session)
+        except Exception as e:
+            logger.error(f"Error starting background audio: {e}")
+            # Continue without background audio if it fails
+            background_audio = None
+
+        # Add cleanup for background audio
+        ctx.add_shutdown_callback(lambda: background_audio.aclose() if background_audio else None)
         
     except ComponentCreationError as e:
         logger.error(f"Failed to create agent components: {e}")

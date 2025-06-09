@@ -534,7 +534,7 @@ async def entrypoint(ctx: agents.JobContext):
     )
 
     survey_agent = SurveyAgent(survey_config, customer_name, webhook_client)
-        
+
     await session.start(
         room=ctx.room,
         agent=survey_agent,
