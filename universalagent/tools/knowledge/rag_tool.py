@@ -119,4 +119,11 @@ class LlamaIndexPineconeRagTool:
         async def search_knowledge_base(context: RunContext, query: str):
             return await self.retrieve(query)
         
-        return ToolHolder(search_knowledge_base, name="search_knowledge_base", description=description)
+        usage_instructions_llm = """
+        Use this tool to search the knowledge base for relevant content. Always mention that you are using the knowledge base to answer the question.
+        If you do not have the information, say you do not know. Do not make up information.
+        Use this tool to answer the questions that are related to the knowledge base.
+        Do not answer questions from your general knowledge use this tool to answer questions.
+        """
+        
+        return ToolHolder(search_knowledge_base, name="search_knowledge_base", description=description, usage_instructions_llm=usage_instructions_llm)

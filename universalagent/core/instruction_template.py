@@ -9,6 +9,7 @@ import logging
 from typing import Dict, Any, Optional, List
 from pathlib import Path
 import jinja2
+from tools.tool_holder import ToolHolder
 
 from universalagent.core.config import AgentConfig
 
@@ -37,7 +38,7 @@ class InstructionTemplate:
         
         logger.info(f"Initialized InstructionTemplate with template directory: {template_dir}")
     
-    def generate_instructions(self, config: AgentConfig, 
+    def generate_instructions(self, config: AgentConfig, tools: List[ToolHolder],
                             additional_context: Optional[Dict[str, Any]] = None) -> str:
         """Generate system instructions from agent configuration using Jinja template.
         
@@ -53,7 +54,7 @@ class InstructionTemplate:
             template = self.env.get_template("base_instruction_template.jinja2")
             
             # Prepare template context
-            context = self._prepare_template_context(config, additional_context)
+            context = self._prepare_template_context(config, tools, additional_context)
             
             # Render the template
             instructions = template.render(**context)
@@ -66,7 +67,7 @@ class InstructionTemplate:
             # Fallback to basic instructions
             return self._generate_fallback_instructions(config)
     
-    def _prepare_template_context(self, config: AgentConfig, 
+    def _prepare_template_context(self, config: AgentConfig, tools: List[ToolHolder],
                                 additional_context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Prepare the context dictionary for template rendering.
         
@@ -82,7 +83,7 @@ class InstructionTemplate:
             "user_instructions": config.system_instructions,
             "guardrails": config.guardrails,
             "context": config.initial_context,
-            "tools": additional_context.get("available_tools", []) if additional_context else [],
+            "tools": tools,
         }
         
         # Add any additional context items

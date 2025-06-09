@@ -50,6 +50,11 @@ You have access to the following tools to assist users:
 
 {% for tool in tools %}
 `{{ tool.name }}`: {{ tool.description }}
+    {% if tool.usage_instructions_llm %}
+    Usage guidelines for `{{ tool.name }}`:
+    - {{ tool.usage_instructions_llm }}
+    {% endif %}
+
 {% endfor %}
 
 Tool usage guidelines:
