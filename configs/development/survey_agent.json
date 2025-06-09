@@ -21,7 +21,8 @@
     "language": "en"
   },
   "rag_config": {
-    "enabled": false
+    "enabled": true,
+    "namespace": "demo"
   },
   "memory_config": {
     "enabled": true,

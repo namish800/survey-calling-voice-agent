@@ -27,8 +27,9 @@ dependencies = [
     "httpx>=0.24.0",
     "structlog",
     "kb-retriever",
-    "pinecone-client",
+    "pinecone>=3.2.2,<6.0.0",
     "llama-index",
+    "llama-index-vector-stores-pinecone",
     "anthropic>=0.25.0",
 ]
 

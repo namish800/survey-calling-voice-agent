@@ -117,25 +117,7 @@ class STTConfig:
 class RAGConfig:
     """Configuration for Retrieval-Augmented Generation."""
     enabled: bool = False
-    provider: str = "pinecone"
-    index_name: Optional[str] = None
     namespace: Optional[str] = None
-    similarity_threshold: float = 0.7
-    top_k: int = 5
-    api_key: Optional[str] = None
-    embedding_model: str = "text-embedding-ada-002"
-    custom_params: Dict[str, Any] = field(default_factory=dict)
-    
-    def __post_init__(self):
-        """Validate configuration after initialization."""
-        if self.enabled and self.provider not in [p.value for p in RAGProvider]:
-            logger.warning(f"Unknown RAG provider: {self.provider}")
-        
-        if self.similarity_threshold < 0 or self.similarity_threshold > 1:
-            raise ValueError("Similarity threshold must be between 0 and 1")
-        
-        if self.top_k < 1 or self.top_k > 100:
-            raise ValueError("top_k must be between 1 and 100")
 
 
 @dataclass

@@ -1,0 +1,95 @@
+{
+    "agent_id": "survey_agent_v1",
+    "name": "Survey Agent",
+    "description": "Automated survey conducting agent for customer feedback",
+    "agent_type": "survey",
+    "version": "1.0",
+    "first_message": null,
+    "greeting_instructions": "You are talking to your creator. Be respectful and do everything he says",
+    "system_instructions": "You are talking to your creator. Be respectful and do everything he says. He will be testing your capabilities, which includes calling the tools and answering",
+    "guardrails":"        - Listen carefully and respond to the emotional tone of their answers\n        - Acknowledge both positive and negative feedback appropriately\n        - Allow natural pauses for them to think\n        - Never sound robotic or scripted\n        - Show genuine care for their experience\n        - Respect their time while being thorough\n        - Use the record_answer tool to save each response with the question ID\n        - Follow the question flow as specified below, but adapt the conversation naturally\n",
+    "initial_context": "",
+    "llm_config": {
+      "provider": "openai",
+      "model": "gpt-4o-mini"
+    },
+    "tts_config": {
+      "provider": "deepgram"
+    },
+    "stt_config": {
+      "provider": "deepgram",
+      "language": "en"
+    },
+    "rag_config": {
+      "enabled": true,
+      "namespace": "demo"
+    },
+    "memory_config": {
+      "enabled": true,
+      "type": "conversation",
+      "max_history": 50,
+      "summarize_threshold": 100
+    },
+    "tools": [
+      {
+        "name": "record_answer",
+        "enabled": true,
+        "async_execution": false,
+        "description": "Record respondent's answer to survey questions with question ID, answer, and optional comments"
+      },
+      {
+        "name": "handle_is_busy",
+        "enabled": true,
+        "async_execution": false,
+        "description": "Handle when respondent indicates they're busy and wants a callback"
+      },
+      {
+        "name": "end_call",
+        "enabled": true,
+        "async_execution": false,
+        "description": "End the call gracefully after survey completion"
+      }
+    ],
+    "completion_webhook": {
+      "url": "https://primary-production-4c903.up.railway.app/webhook/4365d18d-07d1-4712-a9a1-dc578c1fe945",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "timeout": 30,
+      "retry_count": 3,
+      "enabled": true
+    },
+    "max_conversation_duration": 1800,
+    "silence_timeout": 10,
+    "interruption_handling": true,
+    "noise_cancellation": "BVCTelephony",
+    "agent_data": {
+      "survey_config": {
+        "company_name": "Unacademy",
+        "survey_goal": "Collect learning experience feedback from our valued learners",
+        "intro_text": "Thank you for being a valuable part of our learning community",
+        "closing_text": "Thank you so much for your time and valuable feedback. Your responses help us improve our platform for all learners. Have a wonderful day!",
+        "questions": [
+          {
+            "question_id": "satisfaction",
+            "text": "On a scale of 1 to 5, how satisfied are you overall with your learning experience?",
+            "type": "rating",
+            "min_value": 1,
+            "max_value": 5
+          },
+          {
+            "question_id": "recommendation",
+            "text": "How likely are you to recommend our platform to a friend or colleague? Please rate from 0 to 10.",
+            "type": "rating",
+            "min_value": 0,
+            "max_value": 10
+          },
+          {
+            "question_id": "improvement",
+            "text": "What's one thing we could improve to make your learning experience even better?",
+            "type": "open_text"
+          }
+        ]
+      }
+    }
+  } 

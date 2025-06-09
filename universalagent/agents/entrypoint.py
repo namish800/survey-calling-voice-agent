@@ -5,9 +5,10 @@ This module provides functions to create and start configurable agents
 from configuration, integrating with LiveKit's JobContext and AgentSession.
 """
 
+import os
 import json
 import logging
-from typing import Optional, Dict, Any, Callable
+from typing import List, Optional, Dict, Any, Callable
 
 from livekit import agents
 from livekit.agents import AgentSession, RoomInputOptions, JobContext
@@ -21,6 +22,8 @@ from universalagent.core.config_loader import load_config_hybrid
 from universalagent.components.factory import ComponentFactory, ComponentCreationError
 from universalagent.agents.configurable_agent import ConfigurableAgent
 from universalagent.tools.call_management_tools import BUILT_IN_TOOLS
+from universalagent.tools.knowledge.rag_tool import LlamaIndexPineconeRagTool, RAGToolConfig
+from universalagent.tools.tool_holder import ToolHolder
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +63,7 @@ async def configurable_agent_entrypoint(ctx: JobContext) -> None:
 # TODO: Interface for metadata eg. to replace placeholders in instructions
 # TODO: Fetch data from webhook for agent config -- event interface for agent init and fetch data required by agent from webhook
 # TODO: setup context for agent(shared state)
+# TODO: Need to utilize prewarm func
 async def start_agent_session(ctx: JobContext, config: AgentConfig, agent_data: Optional[Dict[str, Any]] = None) -> None:
     """Start an agent session with the given configuration.
     
@@ -95,7 +99,9 @@ async def start_agent_session(ctx: JobContext, config: AgentConfig, agent_data: 
         turn_detection = factory.create_turn_detection(config.turn_detection_config)
         logger.info("Created turn detection")
         
-        tools = list(BUILT_IN_TOOLS.values())
+        # Initialize tools
+        tools = initialize_tools(config)
+
         # Create configurable agent
         agent = ConfigurableAgent(config, runtime_metadata=agent_data, tools=tools)
         logger.info(f"Created agent: {agent}")
@@ -177,6 +183,28 @@ def create_room_input_options(config: AgentConfig) -> Optional[RoomInputOptions]
         logger.warning(f"Failed to create noise cancellation: {e}")
         return None
 
+#TODO: better way of loading environment variables
+def initialize_tools(config: AgentConfig) -> List[ToolHolder]:
+    """Initialize tools based on configuration."""
+    tools = []
+    # Add built-in tools
+    tools.extend(list(BUILT_IN_TOOLS.values()))
+
+    # Add RAG tool
+    if config.rag_config and config.rag_config.enabled:
+        rag_tool_config = RAGToolConfig(
+            openai_api_key=os.getenv("OPENAI_API_KEY"),
+            pinecone_api_key=os.getenv("PINECONE_API_KEY"),
+            index_name=os.getenv("PINECONE_INDEX_NAME"),
+            namespace=config.rag_config.namespace,
+            embedding_model=os.getenv("EMBEDDING_MODEL"),
+            similarity_top_k=int(os.getenv("SIMILARITY_TOP_K", 3)),
+            similarity_threshold=float(os.getenv("SIMILARITY_THRESHOLD", 0.7)),
+        )
+        rag_tool = LlamaIndexPineconeRagTool(rag_tool_config)
+        tools.append(rag_tool.get_rag_tool())
+
+    return tools
 
 def create_worker_options(entrypoint_func: Optional[Callable] = None) -> agents.WorkerOptions:
     """Create WorkerOptions for running the configurable agent.
