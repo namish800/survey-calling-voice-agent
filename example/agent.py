@@ -21,7 +21,7 @@ from livekit.plugins import elevenlabs
 from livekit import api
 from livekit.agents import BackgroundAudioPlayer, AudioConfig, BuiltinAudioClip
 
-from instructions import survey_agent_instructions_v2
+from example.instructions import survey_agent_instructions_v2
 
 # Configure logging
 logger = logging.getLogger(__name__)
