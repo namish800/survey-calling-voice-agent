@@ -11,14 +11,16 @@ import json
 import logging
 from typing import List, Optional, Dict, Any, Callable
 
+from events.event_sender import EventSender
 from livekit import agents
 from livekit.agents import AgentSession, RoomInputOptions, JobContext
 from livekit.agents import BackgroundAudioPlayer, AudioConfig, BuiltinAudioClip
+from livekit.agents import metrics, MetricsCollectedEvent
+
 
 # Import optional noise cancellation
 from livekit.plugins import noise_cancellation
-from transcripts.manager import TranscriptManager
-from transcripts.models import Transcript, TranscriptMessage, TranscriptMetadata
+from transcripts.models import TranscriptMetadata
 
 from universalagent.core.config import AgentConfig
 from universalagent.core.config_loader import load_config_hybrid
@@ -57,27 +59,13 @@ async def configurable_agent_entrypoint(ctx: JobContext) -> None:
         raise Exception(f"Failed to load configuration for agent: {agent_id}")
     
     logger.info(f"Loaded configuration for agent: {config.name}")
-    
-    transcript_manager = ctx.proc.userdata["transcript_manager"]
-    transcript_metadata = TranscriptMetadata(
-            call_id=call_id,
-            agent_id=agent_id,
-            agent_name=config.name,
-            customer_name=metadata.get("customer_name", "customer_name_not_found"),
-            phone_number=metadata.get("phone_number", "phone_number_not_found"),
-        )
-    
-    transcript_manager.register_transcript(ctx, transcript_metadata)
 
     # Create and start the agent session
-    await start_agent_session(ctx, config, agent_data, call_id)
+    await start_agent_session(ctx, config, agent_data, metadata)
 
-# TODO: Add shutdown hook for saving call data
-# TODO: Interface for metadata eg. to replace placeholders in instructions
-# TODO: Fetch data from webhook for agent config -- event interface for agent init and fetch data required by agent from webhook
 # TODO: setup context for agent(shared state)
 # TODO: Need to utilize prewarm func
-async def start_agent_session(ctx: JobContext, config: AgentConfig, agent_data: Optional[Dict[str, Any]] = None, call_id: Optional[str] = None) -> None:
+async def start_agent_session(ctx: JobContext, config: AgentConfig, agent_data: Optional[Dict[str, Any]] = None, metadata: Optional[Dict[str, Any]] = None) -> None:
     """Start an agent session with the given configuration.
     
     Args:
@@ -85,15 +73,28 @@ async def start_agent_session(ctx: JobContext, config: AgentConfig, agent_data: 
         config: Agent configuration
     """ 
     try:
-        transcript_manager = ctx.proc.userdata["transcript_manager"]
-        async def transcript_shutdown_callback():
-            transcript_messages: List[TranscriptMessage] = [TranscriptMessage(role=item.role,
-                                                                            content=' '.join(item.content) if isinstance(item.content, list) else str(item.content),
-                                                                            interrupted=item.interrupted)
-                                                                            for item in session.history.items]
-            await transcript_manager.handle_shutdown(call_id, transcript_messages)
 
-        ctx.add_shutdown_callback(transcript_shutdown_callback)
+
+        transcript_metadata = TranscriptMetadata(
+            call_id=metadata.get("call_id", "call_id_not_found"),
+            agent_id=metadata.get("agent_id", "agent_id_not_found"),
+            agent_name=config.name,
+            customer_name=metadata.get("customer_name", "customer_name_not_found"),
+            phone_number=metadata.get("phone_number", "phone_number_not_found"),
+        )
+        usage_collector = metrics.UsageCollector()
+
+        async def event_sender_shutdown_callback():
+            event_sender = EventSender(
+                transcript_webhook_url=os.getenv("COMPLETION_WEBHOOK_URL"),
+                metrics_webhook_url=os.getenv("COMPLETION_WEBHOOK_URL"),
+            )
+            await event_sender.send_transcript(session, transcript_metadata)
+            summary = usage_collector.get_summary()
+            await event_sender.send_metrics(summary, metadata)
+            await event_sender.aclose()
+
+        ctx.add_shutdown_callback(event_sender_shutdown_callback)
 
         # Create component factory
         factory = ComponentFactory()
@@ -154,7 +155,11 @@ async def start_agent_session(ctx: JobContext, config: AgentConfig, agent_data: 
             agent=agent,
             room_input_options=room_input_options,
         )
-        
+
+        @session.on("metrics_collected")
+        def _on_metrics_collected(ev: MetricsCollectedEvent):
+            usage_collector.collect(ev.metrics)
+
         logger.info("Agent session started successfully")
         
             # Start background audio for better UX
@@ -165,15 +170,20 @@ async def start_agent_session(ctx: JobContext, config: AgentConfig, agent_data: 
             ],
         )
 
-        try:
-            await background_audio.start(room=ctx.room, agent_session=session)
-        except Exception as e:
-            logger.error(f"Error starting background audio: {e}")
-            # Continue without background audio if it fails
-            background_audio = None
+        # TODO: THis causes delay in shutdown in the callback.
+        # try:
+        #     await background_audio.start(room=ctx.room, agent_session=session)
+        # except Exception as e:
+        #     logger.error(f"Error starting background audio: {e}")
+        #     # Continue without background audio if it fails
+        #     background_audio = None
 
-        # Add cleanup for background audio
-        ctx.add_shutdown_callback(lambda: background_audio.aclose() if background_audio else None)
+        # # Add cleanup for background audio
+        # async def background_audio_shutdown_callback():
+        #     if background_audio:
+        #         await background_audio.aclose()
+
+        # ctx.add_shutdown_callback(background_audio_shutdown_callback)
         
     except ComponentCreationError as e:
         logger.error(f"Failed to create agent components: {e}")
@@ -236,11 +246,6 @@ def initialize_tools(config: AgentConfig) -> List[ToolHolder]:
 
     return tools
 
-def prewarm(proc: agents.JobProcess):
-    proc.userdata["transcript_manager"] = TranscriptManager(
-        webhook_url=os.getenv("COMPLETION_WEBHOOK_URL"),
-    )
-
 def create_worker_options(entrypoint_func: Optional[Callable] = None) -> agents.WorkerOptions:
     """Create WorkerOptions for running the configurable agent.
     
@@ -256,6 +261,4 @@ def create_worker_options(entrypoint_func: Optional[Callable] = None) -> agents.
     return agents.WorkerOptions(
         entrypoint_fnc=entrypoint,
         agent_name="base_agent",
-        prewarm_fnc=prewarm,
-        num_idle_processes=1
     )

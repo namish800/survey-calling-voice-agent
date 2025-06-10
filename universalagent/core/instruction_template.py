@@ -158,7 +158,6 @@ def generate_system_instructions(config: AgentConfig,
         return render_instructions_with_data(instructions, runtime_metada)
     return instructions
 
-#TODO: add this to the agent class if required or delete
 def render_instructions_with_data(template_string: str, agent_data: Dict[str, Any]) -> str:
     """Render instruction template string with agent data placeholders.
     

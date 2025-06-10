@@ -324,7 +324,7 @@ class ComponentFactory:
         # Add custom parameters
         kwargs.update(config.custom_params)
         
-        return deepgram.STT(**kwargs)
+        return deepgram.STT(**kwargs)  
     
     def _create_openai_stt(self, config: STTConfig) -> stt.STT:
         """Create OpenAI STT instance."""
@@ -376,5 +376,6 @@ class ComponentFactory:
                 "elevenlabs": ELEVENLABS_AVAILABLE,
                 "deepgram": True,  # Available with base install
                 "openai": True,
+                "cartesia": CARTESIA_AVAILABLE,
             },
         } 

@@ -14,10 +14,10 @@
       "model": "gpt-4o-mini"
     },
     "tts_config": {
-      "provider": "deepgram"
+      "provider": "cartesia"
     },
     "stt_config": {
-      "provider": "deepgram",
+      "provider": "openai",
       "language": "en"
     },
     "rag_config": {
