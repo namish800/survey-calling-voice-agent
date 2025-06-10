@@ -5,6 +5,7 @@ This module provides functions to create and start configurable agents
 from configuration, integrating with LiveKit's JobContext and AgentSession.
 """
 
+import asyncio
 import os
 import json
 import logging
@@ -16,6 +17,8 @@ from livekit.agents import BackgroundAudioPlayer, AudioConfig, BuiltinAudioClip
 
 # Import optional noise cancellation
 from livekit.plugins import noise_cancellation
+from transcripts.manager import TranscriptManager
+from transcripts.models import Transcript, TranscriptMessage, TranscriptMetadata
 
 from universalagent.core.config import AgentConfig
 from universalagent.core.config_loader import load_config_hybrid
@@ -26,7 +29,6 @@ from universalagent.tools.knowledge.rag_tool import LlamaIndexPineconeRagTool, R
 from universalagent.tools.tool_holder import ToolHolder
 
 logger = logging.getLogger(__name__)
-
 
 async def configurable_agent_entrypoint(ctx: JobContext) -> None:
     """Universal entrypoint for configurable agents.
@@ -41,12 +43,12 @@ async def configurable_agent_entrypoint(ctx: JobContext) -> None:
     logger.info(f"Room: {ctx.room.name}")
     logger.info(f"Metadata: {ctx.job.metadata}")
     
-    # Connect to the room
-    await ctx.connect()
+
     metadata = json.loads(ctx.job.metadata) if ctx.job.metadata else {}
     # Load configuration
     agent_id = metadata.get("agent_id", "default")
     agent_data = metadata.get("agent_data", None)
+    call_id = metadata.get("call_id", "call_id_not_found")
 
     config = await load_config_hybrid(agent_id, metadata)
     
@@ -56,22 +58,43 @@ async def configurable_agent_entrypoint(ctx: JobContext) -> None:
     
     logger.info(f"Loaded configuration for agent: {config.name}")
     
+    transcript_manager = ctx.proc.userdata["transcript_manager"]
+    transcript_metadata = TranscriptMetadata(
+            call_id=call_id,
+            agent_id=agent_id,
+            agent_name=config.name,
+            customer_name=metadata.get("customer_name", "customer_name_not_found"),
+            phone_number=metadata.get("phone_number", "phone_number_not_found"),
+        )
+    
+    transcript_manager.register_transcript(ctx, transcript_metadata)
+
     # Create and start the agent session
-    await start_agent_session(ctx, config, agent_data)
+    await start_agent_session(ctx, config, agent_data, call_id)
 
 # TODO: Add shutdown hook for saving call data
 # TODO: Interface for metadata eg. to replace placeholders in instructions
 # TODO: Fetch data from webhook for agent config -- event interface for agent init and fetch data required by agent from webhook
 # TODO: setup context for agent(shared state)
 # TODO: Need to utilize prewarm func
-async def start_agent_session(ctx: JobContext, config: AgentConfig, agent_data: Optional[Dict[str, Any]] = None) -> None:
+async def start_agent_session(ctx: JobContext, config: AgentConfig, agent_data: Optional[Dict[str, Any]] = None, call_id: Optional[str] = None) -> None:
     """Start an agent session with the given configuration.
     
     Args:
         ctx: LiveKit JobContext
         config: Agent configuration
-    """
+    """ 
     try:
+        transcript_manager = ctx.proc.userdata["transcript_manager"]
+        async def transcript_shutdown_callback():
+            transcript_messages: List[TranscriptMessage] = [TranscriptMessage(role=item.role,
+                                                                            content=' '.join(item.content) if isinstance(item.content, list) else str(item.content),
+                                                                            interrupted=item.interrupted)
+                                                                            for item in session.history.items]
+            await transcript_manager.handle_shutdown(call_id, transcript_messages)
+
+        ctx.add_shutdown_callback(transcript_shutdown_callback)
+
         # Create component factory
         factory = ComponentFactory()
         
@@ -102,6 +125,9 @@ async def start_agent_session(ctx: JobContext, config: AgentConfig, agent_data: 
         # Initialize tools
         tools = initialize_tools(config)
 
+        # Connect to the room
+        await ctx.connect()
+
         # Create configurable agent
         agent = ConfigurableAgent(config, runtime_metadata=agent_data, tools=tools)
         logger.info(f"Created agent: {agent}")
@@ -118,6 +144,10 @@ async def start_agent_session(ctx: JobContext, config: AgentConfig, agent_data: 
         # Create room input options with noise cancellation
         room_input_options = create_room_input_options(config)
         
+        logger.info("Waiting for participant to connect...")
+        participant = await ctx.wait_for_participant()
+        logger.info(f"Participant connected: {participant.identity}")
+
         # Start the session
         await session.start(
             room=ctx.room,
@@ -206,6 +236,11 @@ def initialize_tools(config: AgentConfig) -> List[ToolHolder]:
 
     return tools
 
+def prewarm(proc: agents.JobProcess):
+    proc.userdata["transcript_manager"] = TranscriptManager(
+        webhook_url=os.getenv("COMPLETION_WEBHOOK_URL"),
+    )
+
 def create_worker_options(entrypoint_func: Optional[Callable] = None) -> agents.WorkerOptions:
     """Create WorkerOptions for running the configurable agent.
     
@@ -215,10 +250,12 @@ def create_worker_options(entrypoint_func: Optional[Callable] = None) -> agents.
     Returns:
         WorkerOptions configured for the agent
     """
+
     entrypoint = entrypoint_func or configurable_agent_entrypoint
     
     return agents.WorkerOptions(
         entrypoint_fnc=entrypoint,
         agent_name="base_agent",
-        # Additional worker options can be added here
+        prewarm_fnc=prewarm,
+        num_idle_processes=1
     )

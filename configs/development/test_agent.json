@@ -1,6 +1,6 @@
 {
     "agent_id": "survey_agent_v1",
-    "name": "Survey Agent",
+    "name": "Test Agent",
     "description": "Automated survey conducting agent for customer feedback",
     "agent_type": "survey",
     "version": "1.0",
@@ -30,26 +30,7 @@
       "max_history": 50,
       "summarize_threshold": 100
     },
-    "tools": [
-      {
-        "name": "record_answer",
-        "enabled": true,
-        "async_execution": false,
-        "description": "Record respondent's answer to survey questions with question ID, answer, and optional comments"
-      },
-      {
-        "name": "handle_is_busy",
-        "enabled": true,
-        "async_execution": false,
-        "description": "Handle when respondent indicates they're busy and wants a callback"
-      },
-      {
-        "name": "end_call",
-        "enabled": true,
-        "async_execution": false,
-        "description": "End the call gracefully after survey completion"
-      }
-    ],
+    "tools": [],
     "completion_webhook": {
       "url": "https://primary-production-4c903.up.railway.app/webhook/4365d18d-07d1-4712-a9a1-dc578c1fe945",
       "headers": {

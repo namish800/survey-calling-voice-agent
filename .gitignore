@@ -163,7 +163,7 @@ cython_debug/
 .DS_Store
 uv.lock
 
-transcripts/
+transcripts_examples/
 KMS/
 
 outbound-trunk.json

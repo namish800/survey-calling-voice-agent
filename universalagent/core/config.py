@@ -57,6 +57,18 @@ class NoiseCancellationType(Enum):
     BVC_TELEPHONY = "BVCTelephony"
     NONE = "none"
 
+class ToolType(Enum):
+    """Tool types."""
+    DEFAULT = "default"
+    WEBHOOK = "webhook"
+
+@dataclass
+class ApiSpec:
+    """API specification."""
+    url: str
+    method: str
+    headers: Dict[str, str] = field(default_factory=dict)
+    body: Optional[Dict[str, Any]] = None
 
 @dataclass
 class LLMConfig:
@@ -146,19 +158,13 @@ class MemoryConfig:
 @dataclass
 class ToolConfig:
     """Configuration for individual tools."""
+    id: str
     name: str
-    module_path: Optional[str] = None
-    function_name: Optional[str] = None
     enabled: bool = True
     async_execution: bool = False
-    continue_conversation: bool = False
     description: Optional[str] = None
-    config: Dict[str, Any] = field(default_factory=dict)
-    
-    def __post_init__(self):
-        """Validate configuration after initialization."""
-        if self.module_path and not self.function_name:
-            raise ValueError("function_name required when module_path is specified")
+    type: ToolType = ToolType.DEFAULT
+    api_spec: Optional[ApiSpec] = None
 
 
 @dataclass
@@ -216,7 +222,6 @@ class AgentConfig:
     
     # Tools & Capabilities
     tools: List[ToolConfig] = field(default_factory=list)
-    custom_functions: List[str] = field(default_factory=list)
     
     # Webhook Integration
     evaluation_webhook: Optional[WebhookConfig] = None
@@ -335,7 +340,6 @@ class AgentConfig:
             rag_config=rag_config,
             memory_config=memory_config,
             tools=tools,
-            custom_functions=data.get("custom_functions", []),
             evaluation_webhook=evaluation_webhook,
             metrics_webhook=metrics_webhook,
             completion_webhook=completion_webhook,
