@@ -5,6 +5,7 @@ from core.config import MemoryConfig
 from livekit.agents import get_job_context, RunContext
 from livekit.agents import ChatItem
 from mem0 import AsyncMemoryClient
+from tools.decorators import fire_and_forget_tool_decorator
 from tools.tool_holder import FireAndForgetToolHolder, ToolHolder
 
 
@@ -111,6 +112,7 @@ class MemoryManagementTool:
             """
             return await self.get_memory(query)
         
+        @fire_and_forget_tool_decorator()
         async def store_important_info(context: RunContext, info: str, category: str):
             """Store important information about the user's call.
             This information should be valid for the task at hand. These memories will be used by you in the future.
