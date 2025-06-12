@@ -31,6 +31,7 @@ dependencies = [
     "llama-index",
     "llama-index-vector-stores-pinecone",
     "anthropic>=0.25.0",
+    mem0ai,
 ]
 
 [project.optional-dependencies]

@@ -16,10 +16,11 @@ from livekit import agents
 from livekit.agents import AgentSession, RoomInputOptions, JobContext
 from livekit.agents import BackgroundAudioPlayer, AudioConfig, BuiltinAudioClip
 from livekit.agents import metrics, MetricsCollectedEvent
+from livekit.agents import JobProcess
 
 
 # Import optional noise cancellation
-from livekit.plugins import noise_cancellation
+from livekit.plugins import noise_cancellation, silero
 from transcripts.models import TranscriptMetadata
 
 from universalagent.core.config import AgentConfig
@@ -29,6 +30,9 @@ from universalagent.agents.configurable_agent import ConfigurableAgent
 from universalagent.tools.call_management_tools import BUILT_IN_TOOLS
 from universalagent.tools.knowledge.rag_tool import LlamaIndexPineconeRagTool, RAGToolConfig
 from universalagent.tools.tool_holder import ToolHolder
+from universalagent.agents.metadata import CallMetadata
+
+from mem0 import AsyncMemoryClient
 
 logger = logging.getLogger(__name__)
 
@@ -43,29 +47,26 @@ async def configurable_agent_entrypoint(ctx: JobContext) -> None:
     """
     logger.info(f"Starting configurable agent entrypoint")
     logger.info(f"Room: {ctx.room.name}")
-    logger.info(f"Metadata: {ctx.job.metadata}")
     
-
-    metadata = json.loads(ctx.job.metadata) if ctx.job.metadata else {}
+    # Parse metadata using the DTO
+    meta = CallMetadata.from_json(ctx.job.metadata)
+    logger.info(f"Parsed metadata: {meta}")
+    
     # Load configuration
-    agent_id = metadata.get("agent_id", "default")
-    agent_data = metadata.get("agent_data", None)
-    call_id = metadata.get("call_id", "call_id_not_found")
-
-    config = await load_config_hybrid(agent_id, metadata)
+    config = await load_config_hybrid(meta.agent_id, meta.raw)
     
     if not config:
-        logger.error(f"Failed to load configuration for agent: {agent_id}")
-        raise Exception(f"Failed to load configuration for agent: {agent_id}")
+        logger.error(f"Failed to load configuration for agent: {meta.agent_id}")
+        raise Exception(f"Failed to load configuration for agent: {meta.agent_id}")
     
     logger.info(f"Loaded configuration for agent: {config.name}")
 
     # Create and start the agent session
-    await start_agent_session(ctx, config, agent_data, metadata)
+    await start_agent_session(ctx, config, meta)
 
 # TODO: setup context for agent(shared state)
 # TODO: Need to utilize prewarm func
-async def start_agent_session(ctx: JobContext, config: AgentConfig, agent_data: Optional[Dict[str, Any]] = None, metadata: Optional[Dict[str, Any]] = None) -> None:
+async def start_agent_session(ctx: JobContext, config: AgentConfig, meta: CallMetadata) -> None:
     """Start an agent session with the given configuration.
     
     Args:
@@ -76,11 +77,11 @@ async def start_agent_session(ctx: JobContext, config: AgentConfig, agent_data: 
 
 
         transcript_metadata = TranscriptMetadata(
-            call_id=metadata.get("call_id", "call_id_not_found"),
-            agent_id=metadata.get("agent_id", "agent_id_not_found"),
+            call_id=meta.call_id,
+            agent_id=meta.agent_id,
             agent_name=config.name,
-            customer_name=metadata.get("customer_name", "customer_name_not_found"),
-            phone_number=metadata.get("phone_number", "phone_number_not_found"),
+            customer_name=meta.customer_name,
+            phone_number=meta.phone_number,
         )
         usage_collector = metrics.UsageCollector()
 
@@ -91,7 +92,7 @@ async def start_agent_session(ctx: JobContext, config: AgentConfig, agent_data: 
             )
             await event_sender.send_transcript(session, transcript_metadata)
             summary = usage_collector.get_summary()
-            await event_sender.send_metrics(summary, metadata)
+            await event_sender.send_metrics(summary, meta.to_dict())
             await event_sender.aclose()
 
         ctx.add_shutdown_callback(event_sender_shutdown_callback)
@@ -130,7 +131,7 @@ async def start_agent_session(ctx: JobContext, config: AgentConfig, agent_data: 
         await ctx.connect()
 
         # Create configurable agent
-        agent = ConfigurableAgent(config, runtime_metadata=agent_data, tools=tools)
+        agent = ConfigurableAgent(config, runtime_metadata=meta.agent_data, tools=tools)
         logger.info(f"Created agent: {agent}")
         
         # Create AgentSession
@@ -138,7 +139,7 @@ async def start_agent_session(ctx: JobContext, config: AgentConfig, agent_data: 
             stt=stt,
             llm=llm,
             tts=tts,
-            vad=vad,
+            vad=ctx.proc.userdata["vad"],
             turn_detection=turn_detection,
         )
         
@@ -246,6 +247,14 @@ def initialize_tools(config: AgentConfig) -> List[ToolHolder]:
 
     return tools
 
+def prewarm_fnc(proc: JobProcess):
+    # load silero weights and store to process userdata
+    proc.userdata["vad"] = silero.VAD.load()
+
+    # initialize mem0 client
+    mem0 = AsyncMemoryClient()
+    proc.userdata['memory_manager'] = mem0
+
 def create_worker_options(entrypoint_func: Optional[Callable] = None) -> agents.WorkerOptions:
     """Create WorkerOptions for running the configurable agent.
     
@@ -261,4 +270,5 @@ def create_worker_options(entrypoint_func: Optional[Callable] = None) -> agents.
     return agents.WorkerOptions(
         entrypoint_fnc=entrypoint,
         agent_name="base_agent",
+        prewarm_fnc=prewarm_fnc,
     )
