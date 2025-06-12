@@ -6,10 +6,11 @@ components (LLM, TTS, STT, VAD, etc.) from our configuration objects.
 """
 
 import logging
+import os
 from typing import Optional, Dict, Any
 
 from livekit.agents import llm, stt, tts, vad, tokenize
-from livekit.plugins import openai, deepgram, silero
+from livekit.plugins import openai, deepgram, silero, sarvam
 from livekit.plugins.turn_detector.multilingual import MultilingualModel
 
 # Try to import optional providers
@@ -33,6 +34,13 @@ try:
 except ImportError:
     ANTHROPIC_AVAILABLE = False
     logging.warning("Anthropic plugin not available")
+
+try:
+    from livekit.plugins import sarvam
+    SARVAM_AVAILABLE = True
+except ImportError:
+    SARVAM_AVAILABLE = False
+    logging.warning("Sarvam plugin not available")
 
 from universalagent.core.config import LLMConfig, TTSConfig, STTConfig
 
@@ -59,12 +67,14 @@ class ComponentFactory:
             "cartesia": self._create_cartesia_tts,
             "openai": self._create_openai_tts,
             "deepgram": self._create_deepgram_tts,
+            "sarvam": self._create_sarvam_tts,
         }
         
         self._stt_providers = {
             "elevenlabs": self._create_elevenlabs_stt,
             "deepgram": self._create_deepgram_stt,
             "openai": self._create_openai_stt,
+            "sarvam": self._create_sarvam_stt,
         }
     
     def create_llm(self, config: LLMConfig) -> llm.LLM:
@@ -284,7 +294,29 @@ class ComponentFactory:
             kwargs["api_key"] = config.api_key
 
         return deepgram.TTS(**kwargs)
+    
+    def _create_sarvam_tts(self, config: TTSConfig) -> tts.TTS:
+        """Create Sarvam TTS instance."""
+        kwargs = {}
+        
+        kwargs["api_key"] = config.api_key or os.getenv("SARVAM_API_KEY")
             
+        if config.language:
+            kwargs["target_language_code"] = config.language
+        
+        return sarvam.TTS(**kwargs)
+    
+    def _create_sarvam_stt(self, config: STTConfig) -> stt.STT:
+        """Create Sarvam STT instance."""
+        kwargs = {}
+        
+        kwargs["api_key"] = config.api_key or os.getenv("SARVAM_API_KEY")
+        
+        if config.language:
+            kwargs["language"] = config.language
+        
+
+        return sarvam.STT(**kwargs)
     
     # STT provider implementations
     def _create_elevenlabs_stt(self, config: STTConfig) -> stt.STT:

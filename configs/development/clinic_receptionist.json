@@ -14,11 +14,12 @@
       "model": "gpt-4o"
     },
     "tts_config": {
-      "provider": "cartesia"
+      "provider": "sarvam",
+      "language": "hi-IN"
     },
     "stt_config": {
-      "provider": "deepgram",
-      "language": "en"
+      "provider": "sarvam",
+      "language": "hi-IN"
     },
     "rag_config": {
       "enabled": false,
