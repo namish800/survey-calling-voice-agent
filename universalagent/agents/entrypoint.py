@@ -21,6 +21,7 @@ from livekit.agents import JobProcess
 
 # Import optional noise cancellation
 from livekit.plugins import noise_cancellation, silero
+from tools.memory.memory_management_tools import MemoryManagementTool
 from transcripts.models import TranscriptMetadata
 
 from universalagent.core.config import AgentConfig
@@ -85,6 +86,23 @@ async def start_agent_session(ctx: JobContext, config: AgentConfig, meta: CallMe
         )
         usage_collector = metrics.UsageCollector()
 
+        memory_tool = None
+        if config.memory_config and config.memory_config.enabled:
+            logger.info(f"Initializing memory management tool for customer: {meta.customer_id}")
+            memory_tool = MemoryManagementTool(
+                memory_config=config.memory_config,
+                memory_manager=ctx.proc.userdata["memory_manager"],
+                user_id=meta.customer_id,
+                agent_id=meta.agent_id
+            )
+
+            async def memory_manager_shutdown_callback():
+                messages = session.history.items
+                await memory_tool.save_memory_from_messages(messages)
+                logger.info(f"Saved memory from messages")
+
+            ctx.add_shutdown_callback(memory_manager_shutdown_callback)
+
         async def event_sender_shutdown_callback():
             event_sender = EventSender(
                 transcript_webhook_url=os.getenv("COMPLETION_WEBHOOK_URL"),
@@ -125,7 +143,7 @@ async def start_agent_session(ctx: JobContext, config: AgentConfig, meta: CallMe
         logger.info("Created turn detection")
         
         # Initialize tools
-        tools = initialize_tools(config)
+        tools = initialize_tools(ctx, config, meta, memory_tool)
 
         # Connect to the room
         await ctx.connect()
@@ -134,6 +152,11 @@ async def start_agent_session(ctx: JobContext, config: AgentConfig, meta: CallMe
         agent = ConfigurableAgent(config, runtime_metadata=meta.agent_data, tools=tools)
         logger.info(f"Created agent: {agent}")
         
+        session_userdata = {
+            "customer_id": meta.customer_id,
+            "memory_manager": ctx.proc.userdata.get("memory_manager")
+        }
+
         # Create AgentSession
         session = AgentSession(
             stt=stt,
@@ -141,6 +164,7 @@ async def start_agent_session(ctx: JobContext, config: AgentConfig, meta: CallMe
             tts=tts,
             vad=ctx.proc.userdata["vad"],
             turn_detection=turn_detection,
+            userdata=session_userdata
         )
         
         # Create room input options with noise cancellation
@@ -225,7 +249,7 @@ def create_room_input_options(config: AgentConfig) -> Optional[RoomInputOptions]
         return None
 
 #TODO: better way of loading environment variables
-def initialize_tools(config: AgentConfig) -> List[ToolHolder]:
+def initialize_tools(ctx: JobContext, config: AgentConfig, meta: CallMetadata, memory_tool: MemoryManagementTool) -> List[ToolHolder]:
     """Initialize tools based on configuration."""
     tools = []
     # Add built-in tools
@@ -233,6 +257,7 @@ def initialize_tools(config: AgentConfig) -> List[ToolHolder]:
 
     # Add RAG tool
     if config.rag_config and config.rag_config.enabled:
+        logger.info(f"Initializing RAG tool")
         rag_tool_config = RAGToolConfig(
             openai_api_key=os.getenv("OPENAI_API_KEY"),
             pinecone_api_key=os.getenv("PINECONE_API_KEY"),
@@ -244,6 +269,10 @@ def initialize_tools(config: AgentConfig) -> List[ToolHolder]:
         )
         rag_tool = LlamaIndexPineconeRagTool(rag_tool_config)
         tools.append(rag_tool.get_rag_tool())
+    
+    if config.memory_config and config.memory_config.enabled and memory_tool is not None:
+        logger.info(f"Initializing memory management tool for customer: {meta.customer_id}")
+        tools.extend(memory_tool.get_memory_management_tools())
 
     return tools
 

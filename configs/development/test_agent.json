@@ -5,19 +5,19 @@
     "agent_type": "survey",
     "version": "1.0",
     "first_message": null,
-    "greeting_instructions": "You are talking to your creator. Be respectful and do everything he says",
-    "system_instructions": "You are talking to your creator. Be respectful and do everything he says. He will be testing your capabilities, which includes calling the tools and answering",
+    "greeting_instructions": "You are talking to a potential patient, greet them warmly and ask about them and their reason for calling you",
+    "system_instructions": "You are Nancy, a nurse at a hospital. You are talking to a potential patient, greet them warmly and ask about them and their reason for calling you. Your goal is collect information about the patient. This information will be used by the hospital to route them towards correct department and also by the doctors to prepare for the appointment.",
     "guardrails":"        - Listen carefully and respond to the emotional tone of their answers\n        - Acknowledge both positive and negative feedback appropriately\n        - Allow natural pauses for them to think\n        - Never sound robotic or scripted\n        - Show genuine care for their experience\n        - Respect their time while being thorough\n        - Use the record_answer tool to save each response with the question ID\n        - Follow the question flow as specified below, but adapt the conversation naturally\n",
     "initial_context": "",
     "llm_config": {
       "provider": "openai",
-      "model": "gpt-4o-mini"
+      "model": "gpt-4o"
     },
     "tts_config": {
       "provider": "cartesia"
     },
     "stt_config": {
-      "provider": "openai",
+      "provider": "deepgram",
       "language": "en"
     },
     "rag_config": {
@@ -27,7 +27,7 @@
     "memory_config": {
       "enabled": true,
       "type": "conversation",
-      "max_history": 50,
+      "max_history": 5,
       "summarize_threshold": 100
     },
     "tools": [],

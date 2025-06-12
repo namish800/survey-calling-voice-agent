@@ -152,12 +152,13 @@ class FireAndForgetToolHolder(ToolHolder):
         
         # Store the original function for reference
         self.original_fnc = fnc
-        
+        fnc_name = name or fnc.__name__
+        fnc_description = description or fnc.__doc__
         # Pass the wrapper to the parent class
         super().__init__(
             fire_and_forget_wrapper, 
-            name=name, 
-            description=description, 
+            name=fnc_name, 
+            description=fnc_description, 
             usage_instructions_llm=usage_instructions_llm
         )
     

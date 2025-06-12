@@ -84,6 +84,7 @@ class InstructionTemplate:
             "guardrails": config.guardrails,
             "context": config.initial_context,
             "tools": tools,
+            "memory_enabled": config.memory_config.enabled,
         }
         
         # Add any additional context items
