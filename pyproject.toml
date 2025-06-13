@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "universalagent"
 version = "1.0.0"
 description = "A flexible, configuration-driven voice AI agent system built on LiveKit"
-authors = [{name = "Your Name", email = "your.email@example.com"}]
+authors = [{name = "Namish Pruthi", email = "namishpruthi800@gmail.com"}]
 license = {text = "MIT"}
 readme = "README.md"
 requires-python = ">=3.9"
@@ -19,10 +19,12 @@ dependencies = [
     "livekit-plugins-silero>=0.6.0",
     "livekit-plugins-turn-detector>=0.8.0",
     "livekit-plugins-noise-cancellation>=0.2.0",
+    "livekit-plugins-sarvam",
     "python-dotenv>=1.0.0",
     "pydantic>=2.0.0",
     "pyyaml>=6.0.0",
     "aiofiles>=23.0.0",
+    "aiohttp>=3.8.0",
     "jinja2>=3.1.0",
     "httpx>=0.24.0",
     "structlog",
@@ -31,7 +33,7 @@ dependencies = [
     "llama-index",
     "llama-index-vector-stores-pinecone",
     "anthropic>=0.25.0",
-    mem0ai,
+    "mem0ai",
 ]
 
 [project.optional-dependencies]

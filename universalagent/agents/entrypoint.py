@@ -25,7 +25,7 @@ from tools.memory.memory_management_tools import MemoryManagementTool
 from transcripts.models import TranscriptMetadata
 
 from universalagent.core.config import AgentConfig
-from universalagent.core.config_loader import load_config_hybrid
+from universalagent.core.config_loader import load_config_by_id
 from universalagent.components.factory import ComponentFactory, ComponentCreationError
 from universalagent.agents.configurable_agent import ConfigurableAgent
 from universalagent.tools.call_management_tools import BUILT_IN_TOOLS
@@ -54,7 +54,7 @@ async def configurable_agent_entrypoint(ctx: JobContext) -> None:
     logger.info(f"Parsed metadata: {meta}")
     
     # Load configuration
-    config = await load_config_hybrid(meta.agent_id, meta.raw)
+    config = load_config_by_id(meta.agent_id)
     
     if not config:
         logger.error(f"Failed to load configuration for agent: {meta.agent_id}")
@@ -66,7 +66,6 @@ async def configurable_agent_entrypoint(ctx: JobContext) -> None:
     await start_agent_session(ctx, config, meta)
 
 # TODO: setup context for agent(shared state)
-# TODO: Need to utilize prewarm func
 async def start_agent_session(ctx: JobContext, config: AgentConfig, meta: CallMetadata) -> None:
     """Start an agent session with the given configuration.
     
@@ -75,8 +74,6 @@ async def start_agent_session(ctx: JobContext, config: AgentConfig, meta: CallMe
         config: Agent configuration
     """ 
     try:
-
-
         transcript_metadata = TranscriptMetadata(
             call_id=meta.call_id,
             agent_id=meta.agent_id,
