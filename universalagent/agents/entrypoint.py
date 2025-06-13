@@ -32,6 +32,7 @@ from universalagent.tools.call_management_tools import BUILT_IN_TOOLS
 from universalagent.tools.knowledge.rag_tool import LlamaIndexPineconeRagTool, RAGToolConfig
 from universalagent.tools.tool_holder import ToolHolder
 from universalagent.agents.metadata import CallMetadata
+from universalagent.core.config import ToolType
 
 from mem0 import AsyncMemoryClient
 
@@ -273,6 +274,19 @@ def initialize_tools(ctx: JobContext, config: AgentConfig, meta: CallMetadata, m
     if config.memory_config and config.memory_config.enabled and memory_tool is not None:
         logger.info(f"Initializing memory management tool for customer: {meta.customer_id}")
         tools.extend(memory_tool.get_memory_management_tools())
+
+    # Add dynamic webhook tools from config
+    for tool_config in config.tools:
+        if not tool_config.enabled:
+            continue
+        if tool_config.type in (ToolType.WEBHOOK, ToolType.WEBHOOK.value):
+            try:
+                from universalagent.tools.webhook_tool_builder import build_webhook_tool
+                webhook_tool = build_webhook_tool(tool_config)
+                tools.append(webhook_tool)
+                logger.info(f"Registered webhook tool '{tool_config.name}'")
+            except Exception as e:
+                logger.error(f"Failed to build webhook tool '{tool_config.name}': {e}")
 
     return tools
 

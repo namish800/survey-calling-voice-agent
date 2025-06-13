@@ -6,7 +6,7 @@ from livekit.agents import get_job_context, RunContext
 from livekit.agents import ChatItem
 from mem0 import AsyncMemoryClient
 from tools.decorators import fire_and_forget_tool_decorator
-from tools.tool_holder import FireAndForgetToolHolder, ToolHolder
+from tools.tool_holder import ToolHolder
 
 
 logger = logging.getLogger(__name__)

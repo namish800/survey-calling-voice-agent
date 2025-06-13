@@ -57,18 +57,30 @@ class NoiseCancellationType(Enum):
     BVC_TELEPHONY = "BVCTelephony"
     NONE = "none"
 
-class ToolType(Enum):
+class ToolType(str, Enum):
     """Tool types."""
     DEFAULT = "default"
     WEBHOOK = "webhook"
+    CLIENT = "client"
+    SYSTEM = "system"
+
+@dataclass
+class LLMVar:
+    """LLM variable definition for webhook tools."""
+    name: str                       # "note"
+    description: str                # Prompt shown to model
+    schema: Dict[str, Any]          # JSON-Schema fragment
+    required: bool = True
 
 @dataclass
 class ApiSpec:
-    """API specification."""
+    """API specification for webhook tools."""
     url: str
-    method: str
+    method: str = "POST"
     headers: Dict[str, str] = field(default_factory=dict)
-    body: Optional[Dict[str, Any]] = None
+    query: Dict[str, str] = field(default_factory=dict)
+    body: Any = None                # str | dict, may contain {{…}}
+    llm_vars: List[LLMVar] = field(default_factory=list)
 
 @dataclass
 class LLMConfig:
@@ -165,6 +177,8 @@ class ToolConfig:
     description: Optional[str] = None
     type: ToolType = ToolType.DEFAULT
     api_spec: Optional[ApiSpec] = None
+    consts: Dict[str, Any] = field(default_factory=dict)
+    wait_for_result: bool = True
 
 
 @dataclass
@@ -305,6 +319,15 @@ class AgentConfig:
         # Parse tools
         tools = []
         for tool_data in data.get("tools", []):
+            # Handle api_spec with llm_vars
+            if "api_spec" in tool_data and tool_data["api_spec"]:
+                api_spec_data = tool_data["api_spec"]
+                llm_vars = []
+                if "llm_vars" in api_spec_data:
+                    for llm_var_data in api_spec_data["llm_vars"]:
+                        llm_vars.append(LLMVar(**llm_var_data))
+                    api_spec_data = {**api_spec_data, "llm_vars": llm_vars}
+                tool_data = {**tool_data, "api_spec": ApiSpec(**api_spec_data)}
             tools.append(ToolConfig(**tool_data))
         
         # Parse webhooks

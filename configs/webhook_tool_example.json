@@ -1,0 +1,91 @@
+{
+  "agent_id": "webhook-demo-agent",
+  "name": "Webhook Demo Agent",
+  "description": "An agent that demonstrates webhook tool functionality",
+  "llm_config": {
+    "provider": "openai",
+    "model": "gpt-4",
+    "temperature": 0.7
+  },
+  "system_instructions": "You are a helpful assistant that can book appointments and get weather information. Use the available tools when users request these services.",
+  "tools": [
+    {
+      "id": "book-slot",
+      "name": "bookClinicSlot",
+      "description": "Books an appointment at the clinic.",
+      "type": "webhook",
+      "enabled": true,
+      "consts": {
+        "api_key": "TEST123",
+        "clinic_id": "main-clinic"
+      },
+      "api_spec": {
+        "url": "https://httpbin.org/post",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{const.api_key}}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "clinic_id": "{{const.clinic_id}}",
+          "customer_id": "{{ctx.customer_id}}",
+          "appointment": {
+            "time": "{{arg.desired_time}}",
+            "note": "{{arg.note}}"
+          }
+        },
+        "llm_vars": [
+          {
+            "name": "desired_time",
+            "description": "Preferred appointment time in ISO format",
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$"
+            },
+            "required": true
+          },
+          {
+            "name": "note",
+            "description": "Short note for the doctor (max 120 chars)",
+            "schema": {
+              "type": "string",
+              "maxLength": 120
+            },
+            "required": true
+          }
+        ]
+      },
+      "wait_for_result": true
+    },
+    {
+      "id": "weather-api",
+      "name": "getWeather",
+      "description": "Get current weather for a city.",
+      "type": "webhook",
+      "enabled": true,
+      "consts": {
+        "base_url": "https://httpbin.org/get"
+      },
+      "api_spec": {
+        "url": "{{const.base_url}}",
+        "method": "GET",
+        "query": {
+          "q": "{{arg.city}}",
+          "appid": "demo-key"
+        },
+        "llm_vars": [
+          {
+            "name": "city",
+            "description": "City name to get weather for",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true
+          }
+        ]
+      },
+      "wait_for_result": true
+    }
+  ]
+} 
