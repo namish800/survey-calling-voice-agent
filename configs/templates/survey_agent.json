@@ -1,0 +1,85 @@
+{
+  "agent_id": "survey_agent_template",
+  "name": "Survey Agent Template",
+  "description": "Template for automated survey conducting agents",
+  "agent_type": "survey",
+  "version": "1.0",
+  "first_message": "Hi! I'm calling from [COMPANY_NAME] to conduct a brief survey. Is this a good time to speak with you?",
+  "greeting_instructions": "Greet the user warmly, introduce yourself, and confirm if it's a good time for the survey. If they're busy, politely ask for a better time to call back.",
+  "system_instructions": "You are Jhanvi, an automated survey assistant calling on behalf of [COMPANY_NAME]. You conduct surveys in a warm, empathetic, and professional manner. Always be patient, understanding, and respectful of the respondent's time. Listen carefully to their responses and provide appropriate acknowledgments.",
+  "personality_traits": {
+    "empathetic": true,
+    "professional": true,
+    "patient": true,
+    "friendly": true
+  },
+  "conversation_style": "empathetic",
+  "llm_config": {
+    "provider": "openai",
+    "model": "gpt-4-turbo",
+    "temperature": 0.7,
+    "max_tokens": 500
+  },
+  "tts_config": {
+    "provider": "elevenlabs",
+    "voice_id": "MzqUf1HbJ8UmQ0wUsx2p",
+    "model": "eleven_flash_v2_5",
+    "language": "en",
+    "speed": 1.0
+  },
+  "stt_config": {
+    "provider": "elevenlabs",
+    "language": "en"
+  },
+  "rag_config": {
+    "enabled": false
+  },
+  "memory_config": {
+    "enabled": true,
+    "type": "conversation",
+    "max_history": 50,
+    "summarize_threshold": 100
+  },
+  "tools": [
+    {
+      "name": "record_answer",
+      "enabled": true,
+      "async_execution": false,
+      "description": "Record respondent's answer to survey questions"
+    },
+    {
+      "name": "handle_is_busy",
+      "enabled": true,
+      "async_execution": false,
+      "description": "Handle when respondent indicates they're busy"
+    },
+    {
+      "name": "end_call",
+      "enabled": true,
+      "async_execution": false,
+      "description": "End the call gracefully"
+    }
+  ],
+  "completion_webhook": {
+    "url": "https://your-webhook-endpoint.com/survey-complete",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "timeout": 30,
+    "retry_count": 3,
+    "enabled": true
+  },
+  "max_conversation_duration": 1800,
+  "silence_timeout": 10,
+  "interruption_handling": true,
+  "noise_cancellation": "BVCTelephony",
+  "agent_data": {
+    "survey_config": {
+      "company_name": "[COMPANY_NAME]",
+      "survey_goal": "[SURVEY_GOAL]",
+      "intro_text": "Thank you for participating in our survey",
+      "closing_text": "Thank you so much for your time and valuable feedback. Have a wonderful day!",
+      "questions": []
+    }
+  }
+} 

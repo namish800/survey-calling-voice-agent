@@ -1,8 +1,0 @@
-livekit-agents[openai,deepgram,elevenlabs,silero]
-livekit-api
-python-dotenv
-supabase
-asyncpg
-python-dateutil 
-
-kb-retriever @ file:///D:/work/AI/kb-management/dist/kb_retriever-0.1.1-py3-none-any.whl

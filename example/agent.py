@@ -21,7 +21,7 @@ from livekit.plugins import elevenlabs
 from livekit import api
 from livekit.agents import BackgroundAudioPlayer, AudioConfig, BuiltinAudioClip
 
-from instructions import survey_agent_instructions_v2
+from example.instructions import survey_agent_instructions_v2
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -534,7 +534,7 @@ async def entrypoint(ctx: agents.JobContext):
     )
 
     survey_agent = SurveyAgent(survey_config, customer_name, webhook_client)
-        
+
     await session.start(
         room=ctx.room,
         agent=survey_agent,

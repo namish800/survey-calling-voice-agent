@@ -1,0 +1,37 @@
+{
+  "agent_id": "default_assistant",
+  "name": "Default Assistant",
+  "description": "General purpose voice assistant for development and testing",
+  "agent_type": "assistant",
+  "version": "1.0",
+  "greeting_instructions": "Greet the user warmly and offer your assistance",
+  "system_instructions": "You are a helpful voice AI assistant. Be friendly, professional, and helpful in all interactions.",
+  "personality_traits": {
+    "helpful": true,
+    "friendly": true,
+    "professional": true
+  },
+  "conversation_style": "professional",
+  "llm_config": {
+    "provider": "openai",
+    "model": "gpt-4o-mini"
+  },
+  "tts_config": {
+    "provider": "deepgram"
+  },
+  "stt_config": {
+    "provider": "deepgram",
+    "language": "en"
+  },
+  "rag_config": {
+    "enabled": false
+  },
+  "memory_config": {
+    "enabled": false
+  },
+  "tools": [],
+  "max_conversation_duration": 900,
+  "silence_timeout": 15,
+  "interruption_handling": true,
+  "noise_cancellation": "BVC"
+} 
