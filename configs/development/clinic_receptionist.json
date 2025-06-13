@@ -15,11 +15,11 @@
     },
     "tts_config": {
       "provider": "sarvam",
-      "language": "hi-IN"
+      "language": "en-IN"
     },
     "stt_config": {
       "provider": "sarvam",
-      "language": "hi-IN"
+      "language": "en-IN"
     },
     "rag_config": {
       "enabled": false,
