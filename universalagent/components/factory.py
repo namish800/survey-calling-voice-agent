@@ -161,7 +161,7 @@ class ComponentFactory:
         }
         
         if config.max_tokens:
-            kwargs["max_tokens"] = config.max_tokens
+            kwargs["max_completion_tokens"] = config.max_tokens
         
         if config.api_key:
             kwargs["api_key"] = config.api_key

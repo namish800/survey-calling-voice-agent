@@ -159,6 +159,13 @@ class ToolConfig:
 
 
 @dataclass
+class EvaluationCriteria:
+    """Configuration for evaluation criteria."""
+    name: str
+    description: str
+
+
+@dataclass
 class WebhookConfig:
     """Configuration for webhook integrations."""
     url: str
@@ -213,6 +220,9 @@ class AgentConfig:
     
     # Tools & Capabilities
     tools: List[ToolConfig] = field(default_factory=list)
+    
+    # evaluation criteria
+    evaluation_criteria: List[EvaluationCriteria] = field(default_factory=list)
     
     # Webhook Integration
     evaluation_webhook: Optional[WebhookConfig] = None
