@@ -32,19 +32,16 @@ __all__ = [
     # Core configuration
     "AgentConfig",
     "LLMConfig",
-    "TTSConfig", 
+    "TTSConfig",
     "STTConfig",
     "ConfigurationLoader",
     "generate_system_instructions",
-    
     # Agents
     "ConfigurableAgent",
     "create_entrypoint",
-    
     # Components
     "ComponentFactory",
     "ComponentCreationError",
-    
     # Package info
     "__version__",
-] 
+]

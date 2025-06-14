@@ -18,63 +18,71 @@ logger = logging.getLogger(__name__)
 
 class InstructionTemplate:
     """Simple Jinja-based instruction template generator."""
-    
+
     def __init__(self, template_dir: Optional[str] = None):
         """Initialize the instruction template.
-        
+
         Args:
             template_dir: Optional custom template directory path
         """
         # Default to templates directory in core module
         if template_dir is None:
             template_dir = Path(__file__).parent / "templates"
-        
+
         # Set up Jinja environment
         self.env = jinja2.Environment(
-            loader=jinja2.FileSystemLoader(template_dir),
-            trim_blocks=True,
-            lstrip_blocks=True
+            loader=jinja2.FileSystemLoader(template_dir), trim_blocks=True, lstrip_blocks=True
         )
-        
+
         logger.info(f"Initialized InstructionTemplate with template directory: {template_dir}")
-    
-    def generate_instructions(self, config: AgentConfig, tools: List[ToolHolder],
-                            additional_context: Optional[Dict[str, Any]] = None) -> str:
+
+    def generate_instructions(
+        self,
+        config: AgentConfig,
+        tools: List[ToolHolder],
+        additional_context: Optional[Dict[str, Any]] = None,
+    ) -> str:
         """Generate system instructions from agent configuration using Jinja template.
-        
+
         Args:
             config: Agent configuration object
             additional_context: Optional additional context (e.g., tools)
-            
+
         Returns:
             Generated system instructions string
         """
         try:
             # Load the base template
             template = self.env.get_template("base_instruction_template.jinja2")
-            
+
             # Prepare template context
             context = self._prepare_template_context(config, tools, additional_context)
-            
+
             # Render the template
             instructions = template.render(**context)
-            
-            logger.info(f"Generated instructions for {config.name} ({len(instructions)} characters)")
+
+            logger.info(
+                f"Generated instructions for {config.name} ({len(instructions)} characters)"
+            )
             return instructions.strip()
-            
+
         except Exception as e:
             logger.error(f"Failed to generate instructions: {e}")
             # Fallback to basic instructions
             return self._generate_fallback_instructions(config)
-    
-    def _prepare_template_context(self, config: AgentConfig, tools: List[ToolHolder],
-                                additional_context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+
+    def _prepare_template_context(
+        self,
+        config: AgentConfig,
+        tools: List[ToolHolder],
+        additional_context: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
         """Prepare the context dictionary for template rendering.
-        
+
         Args:
             config: Agent configuration
             additional_context: Optional additional context
-            
+
         Returns:
             Context dictionary for template rendering
         """
@@ -86,27 +94,27 @@ class InstructionTemplate:
             "tools": tools,
             "memory_enabled": config.memory_config.enabled,
         }
-        
+
         # Add any additional context items
         if additional_context:
             for key, value in additional_context.items():
                 if key not in context:  # Don't override existing keys
                     context[key] = value
-        
+
         return context
-    
+
     def _format_personality_traits(self, traits: Optional[Dict[str, Any]]) -> List[str]:
         """Format personality traits for template rendering.
-        
+
         Args:
             traits: Personality traits dictionary
-            
+
         Returns:
             List of formatted trait strings
         """
         if not traits:
             return []
-        
+
         formatted_traits = []
         for trait, value in traits.items():
             if isinstance(value, bool) and value:
@@ -115,15 +123,15 @@ class InstructionTemplate:
                 formatted_traits.append(f"{trait} ({value})")
             elif value:  # Any other truthy value
                 formatted_traits.append(str(trait))
-        
+
         return formatted_traits
-    
+
     def _generate_fallback_instructions(self, config: AgentConfig) -> str:
         """Generate basic fallback instructions if template rendering fails.
-        
+
         Args:
             config: Agent configuration
-            
+
         Returns:
             Basic instruction string
         """
@@ -139,17 +147,19 @@ If you encounter limitations, acknowledge them transparently and suggest alterna
         return fallback
 
 
-def generate_system_instructions(config: AgentConfig, 
-                               additional_context: Optional[Dict[str, Any]] = None,
-                               template_dir: Optional[str] = None, 
-                               runtime_metada: Optional[Dict[str, Any]] = None) -> str:
+def generate_system_instructions(
+    config: AgentConfig,
+    additional_context: Optional[Dict[str, Any]] = None,
+    template_dir: Optional[str] = None,
+    runtime_metada: Optional[Dict[str, Any]] = None,
+) -> str:
     """Generate system instructions for an agent configuration.
-    
+
     Args:
         config: Agent configuration object
         additional_context: Optional additional context (tools, etc.)
         template_dir: Optional custom template directory
-        
+
     Returns:
         Generated system instructions string
     """
@@ -159,19 +169,20 @@ def generate_system_instructions(config: AgentConfig,
         return render_instructions_with_data(instructions, runtime_metada)
     return instructions
 
+
 def render_instructions_with_data(template_string: str, agent_data: Dict[str, Any]) -> str:
     """Render instruction template string with agent data placeholders.
-    
+
     This allows users to provide instructions with placeholders that get filled
     from the agent_data field during runtime.
-    
+
     Args:
         template_string: Instruction template with placeholders
         agent_data: Data dictionary for placeholder replacement
-        
+
     Returns:
         Rendered instruction string
-        
+
     Example:
         template = "You are calling for {{ company_name }} about {{ survey_topic }}."
         agent_data = {"company_name": "Acme Corp", "survey_topic": "customer satisfaction"}
@@ -180,16 +191,12 @@ def render_instructions_with_data(template_string: str, agent_data: Dict[str, An
     """
     try:
         # Create a simple Jinja environment for string templates
-        env = jinja2.Environment(
-            loader=jinja2.BaseLoader(),
-            trim_blocks=True,
-            lstrip_blocks=True
-        )
-        
+        env = jinja2.Environment(loader=jinja2.BaseLoader(), trim_blocks=True, lstrip_blocks=True)
+
         template = env.from_string(template_string)
         return template.render(**agent_data).strip()
-        
+
     except Exception as e:
         logger.warning(f"Failed to render template string with agent data: {e}")
         # Return original string if rendering fails
-        return template_string 
+        return template_string

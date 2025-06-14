@@ -11,6 +11,7 @@ import json
 @dataclass
 class CallMetadata:
     """Parsed metadata attached to the LiveKit job."""
+
     agent_id: str
     call_id: str
 
@@ -38,4 +39,4 @@ class CallMetadata:
         )
 
     def to_dict(self) -> Dict[str, Any]:
-        return asdict(self) 
+        return asdict(self)
