@@ -181,7 +181,7 @@ class ComponentFactory:
         kwargs = {}
         
         if config.voice_id:
-            kwargs["voice"] = config.voice_id
+            kwargs["voice_id"] = config.voice_id
         
         if config.model:
             kwargs["model"] = config.model
@@ -241,6 +241,10 @@ class ComponentFactory:
         if config.api_key:
             kwargs["api_key"] = config.api_key
 
+        if config.model:
+            kwargs["model"] = config.model
+            
+        kwargs.update(config.custom_params)
         return deepgram.TTS(**kwargs)
     
     def _create_sarvam_tts(self, config: TTSConfig) -> tts.TTS:
@@ -251,6 +255,14 @@ class ComponentFactory:
             
         if config.language:
             kwargs["target_language_code"] = config.language
+
+        if config.model:
+            kwargs["model"] = config.model
+        
+        if config.voice_id:
+            kwargs["speaker"] = config.voice_id
+        
+        kwargs.update(config.custom_params)
         
         return sarvam.TTS(**kwargs)
     
@@ -263,7 +275,11 @@ class ComponentFactory:
         if config.language:
             kwargs["language"] = config.language
         
-
+        if config.model:
+            kwargs["model"] = config.model
+        
+        kwargs.update(config.custom_params)
+        
         return sarvam.STT(**kwargs)
     
     # STT provider implementations
@@ -273,11 +289,8 @@ class ComponentFactory:
         kwargs = {}
         
         if config.language:
-            kwargs["language"] = config.language
-        
-        if config.model:
-            kwargs["model"] = config.model
-        
+            kwargs["language_code"] = config.language
+
         if config.api_key:
             kwargs["api_key"] = config.api_key
         
