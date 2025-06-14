@@ -7,4 +7,4 @@ from .factory import ComponentFactory, ComponentCreationError
 __all__ = [
     "ComponentFactory",
     "ComponentCreationError",
-] 
+]

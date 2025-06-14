@@ -7,15 +7,18 @@ transmitting conversation transcripts to webhook endpoints.
 """
 
 from universalagent.transcripts.models import (
-    Transcript, TranscriptMetadata, TranscriptMessage, TranscriptWebhookPayload
+    Transcript,
+    TranscriptMetadata,
+    TranscriptMessage,
+    TranscriptWebhookPayload,
 )
 from universalagent.transcripts.formatters import MarkdownFormatter, HTMLFormatter
 
 __all__ = [
-    'Transcript',
-    'TranscriptMetadata',
-    'TranscriptMessage',
-    'TranscriptWebhookPayload',
-    'MarkdownFormatter',
-    'HTMLFormatter',
+    "Transcript",
+    "TranscriptMetadata",
+    "TranscriptMessage",
+    "TranscriptWebhookPayload",
+    "MarkdownFormatter",
+    "HTMLFormatter",
 ]

@@ -23,11 +23,12 @@ def fire_and_forget_tool_decorator(
             # launch the real coroutine in the background
             asyncio.create_task(fn(*args, **kwargs))
             return return_message or f"{fn.__name__} started in background"
-        
+
         # make the wrapper indistinguishable from the original
         functools.update_wrapper(_wrapper, fn)
-        _wrapper.__signature__ = inspect.signature(fn)     # type: ignore[attr-defined]
+        _wrapper.__signature__ = inspect.signature(fn)  # type: ignore[attr-defined]
         return _wrapper
+
     return decorator
 
     return decorator

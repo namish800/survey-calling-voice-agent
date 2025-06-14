@@ -20,23 +20,22 @@ logger = logging.getLogger(__name__)
 async def end_call(ctx: RunContext, reason: str = "completed") -> str:
     """
     End the current call gracefully.
-    
+
     Args:
         reason: Reason for ending the call (completed, busy, error, etc.)
-    
+
     Returns:
         Confirmation message
     """
     logger.info(f"Ending call with reason: {reason}")
-    
+
     current_speech = ctx.session.current_speech
     if current_speech:
         logger.info("Waiting for current speech to playout")
         await current_speech.wait_for_playout()
-    
-    
+
     job_ctx = get_job_context()
-    
+
     try:
         await job_ctx.api.room.delete_room(api.DeleteRoomRequest(room=job_ctx.room.name))
     except Exception as e:

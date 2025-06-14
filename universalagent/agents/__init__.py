@@ -6,4 +6,4 @@ from .configurable_agent import ConfigurableAgent
 
 __all__ = [
     "ConfigurableAgent",
-] 
+]
