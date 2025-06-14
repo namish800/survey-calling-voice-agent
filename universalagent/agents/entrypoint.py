@@ -11,6 +11,7 @@ import json
 import logging
 from typing import List, Optional, Dict, Any, Callable
 
+from agents.handler.silencetimeouthandler import SilenceTimeoutHandler
 from events.event_sender import EventSender
 from livekit import agents
 from livekit.agents import AgentSession, RoomInputOptions, JobContext
@@ -179,6 +180,10 @@ async def start_agent_session(ctx: JobContext, config: AgentConfig, meta: CallMe
             agent=agent,
             room_input_options=room_input_options,
         )
+
+        # Silence timeout in seconds
+        silence_timeout = config.silence_timeout or 10
+        silence_handler = SilenceTimeoutHandler(session, timeout_seconds=silence_timeout)
 
         @session.on("metrics_collected")
         def _on_metrics_collected(ev: MetricsCollectedEvent):

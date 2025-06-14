@@ -42,7 +42,7 @@
       "enabled": true
     },
     "max_conversation_duration": 1800,
-    "silence_timeout": 10,
+    "silence_timeout": 5,
     "interruption_handling": true,
     "noise_cancellation": "BVCTelephony"
 } 
