@@ -4,7 +4,7 @@ A flexible, configuration-driven voice AI agent system built on LiveKit that can
 
 ## 🚀 Features
 
-- **Configuration-Driven Architecture**: Define agent behavior through JSON configuration
+- **Configuration-Driven Architecture**: Define agent behavior through JSON configurations
 - **Multi-Provider Support**: OpenAI, ElevenLabs, Deepgram, Cartesia, and more
 - **Dynamic Tool System**: Built-in and custom tools for various use cases
 - **RAG Integration**: Knowledge base integration with Pinecone and LlamaIndex

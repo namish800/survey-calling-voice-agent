@@ -15,7 +15,6 @@ from .config import (
     MemoryConfig,
     ToolConfig,
     WebhookConfig,
-    AgentType,
     LLMProvider,
     TTSProvider,
     STTProvider,
@@ -49,7 +48,6 @@ __all__ = [
     "WebhookConfig",
     
     # Enums
-    "AgentType",
     "LLMProvider",
     "TTSProvider", 
     "STTProvider",

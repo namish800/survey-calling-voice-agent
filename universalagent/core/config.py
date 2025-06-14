@@ -14,15 +14,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class AgentType(Enum):
-    """Supported agent types."""
-    SURVEY = "survey"
-    SALES = "sales"
-    SUPPORT = "support"
-    ASSISTANT = "assistant"
-    CUSTOM = "custom"
-
-
 class LLMProvider(Enum):
     """Supported LLM providers."""
     OPENAI = "openai"
@@ -247,9 +238,6 @@ class AgentConfig:
         
         if not self.system_instructions:
             logger.warning("No system instructions provided")
-        
-        if self.agent_type not in [t.value for t in AgentType]:
-            logger.warning(f"Unknown agent type: {self.agent_type}")
         
         if self.noise_cancellation not in [nc.value for nc in NoiseCancellationType]:
             logger.warning(f"Unknown noise cancellation type: {self.noise_cancellation}")
