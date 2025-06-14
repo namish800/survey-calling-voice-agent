@@ -50,7 +50,7 @@ We actively welcome your pull requests:
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd Vaani
+   cd vaani
    ```
 
 2. **Create a virtual environment**
