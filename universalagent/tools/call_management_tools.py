@@ -12,7 +12,7 @@ from livekit.agents import function_tool
 from livekit import rtc, api
 from livekit.agents import get_job_context, RunContext
 
-from tools.tool_holder import ToolHolder
+from universalagent.tools.tool_holder import ToolHolder
 
 logger = logging.getLogger(__name__)
 
