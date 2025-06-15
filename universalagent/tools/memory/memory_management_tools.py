@@ -1,12 +1,12 @@
 import json
 import logging
 from typing import Dict, List, Optional
-from core.config import MemoryConfig
+from universalagent.core.config import MemoryConfig
 from livekit.agents import get_job_context, RunContext
 from livekit.agents import ChatItem
 from mem0 import AsyncMemoryClient
-from tools.decorators import fire_and_forget_tool_decorator
-from tools.tool_holder import FireAndForgetToolHolder, ToolHolder
+from universalagent.tools.decorators import fire_and_forget_tool_decorator
+from universalagent.tools.tool_holder import FireAndForgetToolHolder, ToolHolder
 
 
 logger = logging.getLogger(__name__)
