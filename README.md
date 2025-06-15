@@ -1,363 +1,205 @@
-# UniversalAgent - Configurable LiveKit Voice AI System
+# Vaani – Universal Agent for LiveKit Voice AI
 
-A flexible, configuration-driven voice AI agent system built on LiveKit that can adapt to different use cases (surveys, sales, support, etc.) through configuration rather than hardcoded logic.
+## Intorduction
 
-## 🚀 Features
+Vaani is a **configuration-driven voice-AI framework** built on top of the [LiveKit Agents](https://github.com/livekit/agents) SDK.  
+Instead of hard-coding every interaction, you describe how your agent should behave in a single JSON file. Vaani loads that file, connects the dots (LLM, TTS, STT, VAD, RAG, tools, memory, etc.) and spins up a fully-working, production-ready voice agent.
 
-- **Configuration-Driven Architecture**: Define agent behavior through JSON configurations
-- **Multi-Provider Support**: OpenAI, ElevenLabs, Deepgram, Cartesia, and more
-- **Dynamic Tool System**: Built-in and custom tools for various use cases
-- **RAG Integration**: Knowledge base integration with Pinecone and LlamaIndex
-- **Flexible Component Factory**: Automatic component creation from configurations
-- **Production Ready**: Comprehensive error handling, logging, and monitoring
+## Features
 
-## 📋 Requirements
+* **Zero-code configuration** – change behaviour by editing JSON, no redeploys needed.  
+* **Pluggable providers** – OpenAI, Deepgram, ElevenLabs, Sarvam, Pinecone & more.  
+* **Built-in tool system** – extend the agent with Python async functions, exposed to the LLM.  
+* **Realtime turn detection** – Silero VAD + optional LiveKit EOU model.  
+* **RAG ready** – drop-in Pinecone + LlamaIndex retrieval pipeline.  
+* **Conversation memory** – opt-in long-term memory backed by [Mem0](https://github.com/mem0-ai/mem0).  
+* **Streamlit config builder** – point-and-click wizard to generate valid configs.  
+* **Works everywhere** – macOS, Linux, Windows, Cloud, Docker.
 
-- Python 3.9+
-- LiveKit Cloud account or self-hosted LiveKit server
-- API keys for chosen providers (OpenAI, ElevenLabs, etc.)
-- Optional: Pinecone for RAG functionality
+## Requirements
 
-## 🛠️ Installation
+* Python ≥ 3.9  
+* A LiveKit Cloud project **or** self-hosted LiveKit server
+* Livekit API keys  
+* API keys for the providers you plan to use (OpenAI, Deepgram, Pinecone, …)  
+* (Optional) `ffmpeg` installed locally for audio transcoding
 
-1. **Clone the repository:**
+## Setup
+
 ```bash
-git clone <repository-url>
-cd livekit-voice-agents
+# 1. clone & cd
+$ git clone https://github.com/your-org/vaani.git
+$ cd vaani
+
+# 2. create & activate venv
+$ python -m venv .venv
+$ source .venv/bin/activate   # Windows: .venv\Scripts\activate
+
+# 3. install in editable mode (+ extras)
+$ pip install -e .[dev]
+
+# 4. copy env template & add your keys
+$ cp .env.example .env
 ```
 
-2. **Create virtual environment:**
+Run the default assistant in **dev** mode:
+
 ```bash
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+$ python universal_agent.py dev
 ```
 
-3. **Install dependencies:**
-```bash
-pip install -e .
-```
+The agent registers with LiveKit under the ID defined in `universal_agent.py` and is ready to accept calls.
 
-4. **Set up environment variables:**
-```bash
-cp .env.example .env
-# Edit .env with your API keys
-```
+## explain Agent configuration
 
-## ⚡ Quick Start
-
-### 1. Configure Your Agent
-
-Agent configurations are stored in JSON files that define the complete behavior of your voice agent. Here's a basic example:
+Each agent is described by a single JSON conforming to `universalagent.core.AgentConfig`.  
+Below is a minimal but complete example:
 
 ```json
 {
-  "agent_id": "my_assistant",
-  "name": "My Voice Assistant",
-  "description": "A helpful voice assistant",
-  "agent_type": "assistant",
-  "system_instructions": "You are a helpful voice AI assistant. Be friendly, professional, and helpful in all interactions.",
-  "greeting_instructions": "Greet the user warmly and offer your assistance",
-  
-  "personality_traits": {
-    "helpful": true,
-    "friendly": true,
-    "professional": true
-  },
-  "conversation_style": "professional",
-  
+  "agent_id": "demo_assistant",
+  "name": "Demo Assistant",
+  "description": "General purpose helper",
+
   "llm_config": {
     "provider": "openai",
     "model": "gpt-4o-mini",
     "temperature": 0.7
   },
-  
-  "tts_config": {
-    "provider": "deepgram"
-  },
-  
-  "stt_config": {
-    "provider": "deepgram",
-    "language": "en"
-  },
-  
-  "tools": ["end_call"],
+
+  "tts_config": { "provider": "deepgram" },
+  "stt_config": { "provider": "deepgram", "language": "en" },
+
   "max_conversation_duration": 900,
   "silence_timeout": 15,
-  "noise_cancellation": "BVC"
+  "tools": ["end_call"],
+
+  "rag_config": { "enabled": false },
+  "memory_config": { "enabled": false }
 }
 ```
 
-Save this as `configs/development/my_assistant.json`.
+Key sections:
 
-### 2. Run Your Agent in Development
+| Section | Purpose |
+|---------|---------|
+| `agent_id` | Unique dispatch key used by LiveKit |
+| `llm_config` / `tts_config` / `stt_config` | Chooses providers & models |
+| `rag_config` | Toggles knowledge-retrieval pipeline |
+| `memory_config` | Enables per-user memory & sets limits |
+| `tools` | List of tool *names* exposed to the LLM |
+| `max_conversation_duration` | Auto-hangup after N seconds |
+| `silence_timeout` | Prompt the user after N seconds of silence |
 
-Start the agent in development mode:
+Environment variables (see `.env.example`) hold the API keys so you can share config JSON without secrets.
 
+## Default tools
+
+The framework ships with a small but useful set of always-available tools:
+
+| Tool | Description |
+|------|-------------|
+| `end_call` | Gracefully terminates the current LiveKit room & cleans up |
+
+You can add your own by wrapping an `async def` with `ToolHolder`.
+
+## RAG tools when rag enabled
+
+When `rag_config.enabled == true` Vaani automatically registers **`search_knowledge_base`** powered by `LlamaIndexPineconeRagTool`. Just drop in your namepsace
+
+Usage (inside the LLM):
+```
+#tool search_knowledge_base("what is the refund policy?")
+```
+The tool returns relevant chunks which are then weaved into the assistant response.
+
+## Memory tools when memory enabled
+
+Enabling `memory_config.enabled` adds two tools:
+
+| Tool | Mode | Purpose |
+|------|------|---------|
+| `get_memory` | sync | Retrieve previous memories relevant to a query |
+| `store_important_info` | fire-and-forget | Persist information the user reveals during the call |
+
+When memory is enabled, at the end of the call the transcription is used to create both agent and user memories.
+Memories are stored in Mem0 and automatically summarised when they exceed `summarize_threshold`.
+
+## Example configs
+
+* `example/configs/default.json` – simple assistant  
+* `example/configs/clinic_receptionist.json` – appointment scheduling agent  
+* `example/configs/survey_agent.json` – multi-question NPS survey with `record_answer` tool
+
+Copy one of these, tweak, then launch with:
+Start and Register the worker with livekit server
 ```bash
 python universal_agent.py dev
 ```
 
-This command:
-- Registers your agent with the LiveKit server
-- Makes it available for dispatch using the `agent_id`
-- Runs in development mode with enhanced logging
-
-### 3. How Agent Dispatch Works
-
-Once your agent is running, it's registered with LiveKit and can be dispatched:
-
-1. **Agent Registration**: When you run `python universal_agent.py dev`, your agent registers with the LiveKit server
-2. **Agent Dispatch**: When a call comes in, you specify the `agent_id` in the dispatch metadata
-3. **Config Loading**: The system loads the configuration file matching the `agent_id`
-4. **Agent Creation**: A configured agent instance is created with the specified behavior
-
-For more details about LiveKit dispatch and room management, check the [LiveKit documentation](https://docs.livekit.io/).
-
-## 📁 Project Structure
-
-```
-universalagent/
-├── core/                    # Core configuration and session management
-│   ├── config.py           # Configuration dataclasses
-│   ├── config_loader.py    # Configuration loading utilities
-│   └── session.py          # Enhanced AgentSession wrapper
-├── components/              # Component factory for LLM/TTS/STT
-│   └── factory.py          # ComponentFactory class
-├── agents/                  # Agent implementations
-│   ├── configurable_agent.py  # Main configurable agent
-│   └── entrypoint.py       # Universal entrypoint
-└── tools/                   # Tool system
-    ├── tool_holder.py      # Tool wrapper class
-    ├── call_management_tools.py  # Built-in call tools
-    └── knowledge/          # RAG and knowledge tools
-        └── rag_tool.py     # Pinecone RAG integration
+Dispatch the agent:
+```bash
+lk dispatch create \
+  --agent-name base_agent \ # This should match the agent name in worker options
+  --metadata '{
+    "agent_id": "clinic_receptionist",
+    "call_id": "xyz-call-id",
+    "customer_name": "",
+    "customer_id": "xyz-cust-id", # this will be used to create memories about the caller
+    "phone_number": "",
+    }'
 ```
 
-## 🔧 Agent Configuration Deep Dive
+## configbuilder
 
-### Core Agent Properties
-
-- **`agent_id`**: Unique identifier used for dispatch
-- **`name`**: Human-readable agent name
-- **`description`**: Agent description for documentation
-- **`agent_type`**: Category of agent (assistant, survey, sales, support)
-- **`system_instructions`**: Core behavioral instructions for the LLM
-- **`greeting_instructions`**: How the agent should greet users
-
-### Personality & Behavior
-
-```json
-{
-  "personality_traits": {
-    "helpful": true,
-    "friendly": true,
-    "professional": true,
-    "patient": "with confused users"
-  },
-  "conversation_style": "professional",
-  "max_conversation_duration": 1800,
-  "silence_timeout": 15
-}
-```
-
-### Component Configuration
-
-```json
-{
-  "llm_config": {
-    "provider": "openai",
-    "model": "gpt-4o-mini",
-    "temperature": 0.7,
-    "max_tokens": 500
-  },
-  "tts_config": {
-    "provider": "elevenlabs",
-    "voice_id": "your-voice-id",
-    "model": "eleven_flash_v2_5"
-  },
-  "stt_config": {
-    "provider": "deepgram",
-    "model": "nova-2",
-    "language": "en"
-  }
-}
-```
-
-### Environment Variables
+A Streamlit app that lets non-developers design agents via a 4-step wizard, complete with real-time validation and provider auto-detection.
 
 ```bash
-# LiveKit
-LIVEKIT_URL=wss://your-livekit-url
-LIVEKIT_API_KEY=your-api-key
-LIVEKIT_API_SECRET=your-api-secret
-
-# AI Providers
-OPENAI_API_KEY=your-openai-key
-ELEVENLABS_API_KEY=your-elevenlabs-key
-DEEPGRAM_API_KEY=your-deepgram-key
-
-# RAG (Optional)
-PINECONE_API_KEY=your-pinecone-key
+$ cd configbuilder/streamlit
+$ pip install -r requirements.txt
+$ streamlit run agent_config_builder.py
 ```
 
-## 🛠️ Built-in Tools
+The generated JSON can be saved directly into the `example/configs` folder.
 
-The system comes with several built-in tools that are automatically available:
+## Contrubuting
 
-### Default Tools (Always Available)
+Pull requests are welcome! Please:
+1. Fork & create a branch (`feature/my-feature`)
+2. Submit the PR and fill in the template
 
-- **`end_call`**: Gracefully terminate the current call
-  - Usage: When conversation is complete or user requests to end
-  - Description: Ensures proper call cleanup and resource management
+## License
 
-### Optional Tools (Enable in Config)
+This project is released under the **MIT License** – see [`LICENSE`](LICENSE) for details.
 
-Add these to your `"tools"` array in the configuration:
+## Support
 
-- **`search_knowledge_base`**: Search Pinecone knowledge base
-  - Requires: RAG configuration with Pinecone setup
-  - Usage: Answer questions using your knowledge base
+* **Issues** – bug reports & feature requests on GitHub  
+* **Discussions** – ask „how do I…?“ in the GitHub Discussions tab  
+* **LiveKit Slack** – #voice-ai-agents channel for real-time help
 
-- **`schedule_callback`**: Schedule follow-up calls
-  - Usage: When user is busy or requests a callback
+## Related projects
 
-- **`record_answer`**: Save structured data responses
-  - Usage: For surveys or data collection scenarios
+* [LiveKit](https://github.com/livekit/livekit) – realtime audio/video infra  
+* [LiveKit Agents](https://github.com/livekit/agents) – official agents SDK  
+* [Mem0](https://github.com/mem0-ai/mem0) – vector-based memory store  
+* [LlamaIndex](https://github.com/llama-index-research/llama_index) – data framework for RAG  
+* [Pinecone](https://www.pinecone.io/) – vector database powering the RAG example  
 
-### Tool Configuration Examples
+## Future steps
 
-```json
-{
-  "tools": ["end_call", "search_knowledge_base"],
-  "rag_config": {
-    "enabled": true,
-    "provider": "pinecone",
-    "index_name": "knowledge-base",
-    "namespace": "default",
-    "similarity_top_k": 5
-  }
-}
-```
+The roadmap for Vaani includes several significant capabilities that are already under active development:
 
-## 🔌 Custom Tools
+1. **Custom tools via OpenAPI / JSON Schema**  
+   Allow tool authors to describe functions with a full *API spec*. The spec is surfaced to the LLM so it can reason about parameters, response shapes & error codes automatically—no manual prompt engineering required.
 
-Create custom tools by extending the ToolHolder class:
+2. **Remote configuration server**  
+   Allow the worker to fetch the agent config from a remote server using `agent_id` instead of searching in local files.
 
-```python
-from universalagent.tools.tool_holder import ToolHolder
-from livekit.agents import RunContext
+3. **MCP integration**  
+   Add support for MCP which allows users to connect their tools following Model context protocol.
 
-async def my_custom_tool(ctx: RunContext, query: str) -> str:
-    """My custom tool description"""
-    # Your tool logic here
-    return "Tool response"
+4. **Context enrichment from memory**  
+   When `memory_config.enabled` is `true`, the start-up pipeline will query Mem0 for the caller's recent memories and automatically prepend them to the agent's *initial context* so the LLM starts the conversation fully informed.
 
-# Create a standalone function (not a method) for LiveKit compatibility
-async def search_database(context: RunContext, query: str) -> str:
-    """Search our internal database for information"""
-    # Your database search logic
-    return f"Database results for: {query}"
-
-# Register the tool
-tool = ToolHolder(search_database, name="search_database")
-```
-
-## 🧠 RAG Integration
-
-### Setup Pinecone
-
-```python
-from universalagent.tools.knowledge.rag_tool import RAGToolConfig, LlamaIndexPineconeRagTool
-
-config = RAGToolConfig(
-    openai_api_key="your-key",
-    pinecone_api_key="your-key", 
-    index_name="knowledge-base",
-    namespace="default"
-)
-
-rag_tool = LlamaIndexPineconeRagTool(config)
-```
-
-### Use in Agent Configuration
-
-```json
-{
-  "tools": ["search_knowledge_base"],
-  "rag_config": {
-    "enabled": true,
-    "provider": "pinecone",
-    "index_name": "knowledge-base",
-    "namespace": "default",
-    "similarity_top_k": 5
-  }
-}
-```
-
-## 📊 Configuration Examples
-
-### Survey Agent
-See `configs/development/survey_agent.json` for a complete survey agent configuration.
-
-### Default Assistant  
-See `configs/development/default.json` for a basic assistant setup.
-
-### Test Agent
-See `configs/development/test_agent.json` for testing configuration.
-
-## 🧪 Testing
-
-Run the test suite:
-
-```bash
-# Run all tests
-pytest
-
-# Run with coverage
-pytest --cov=universalagent
-
-# Run specific test file
-pytest tests/test_config.py
-```
-
-## 🚀 Development Status
-
-### ✅ Phase 1 Complete: Core Foundation
-- Configuration system with validation
-- Component factory for all providers
-- Basic configurable agent with LiveKit integration
-
-### 🚧 Phase 2 In Progress: Tool System
-- Dynamic tool loading and management
-- Built-in tools for common operations
-- Custom tool development framework
-
-### 📋 Upcoming: Advanced Features
-- Memory management system
-- Webhook integrations
-- Template inheritance
-- Performance optimization
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Submit a pull request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🆘 Support
-
-- **Documentation**: Check the `docs/` directory
-- **Issues**: Open a GitHub issue
-- **Discussions**: Use GitHub Discussions for questions
-
-## 🔗 Related Projects
-
-- [LiveKit](https://github.com/livekit/livekit) - Real-time communication platform
-- [LiveKit Agents](https://github.com/livekit/agents) - AI agent framework
-- [KB Retriever](https://github.com/kb-retriever/kb-retriever) - Knowledge base retrieval
+Feel free to open discussions or issues if you'd like to shape any of these features.
