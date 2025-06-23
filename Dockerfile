@@ -31,6 +31,14 @@ USER appuser
 RUN mkdir -p /home/appuser/.cache
 RUN chown -R appuser /home/appuser/.cache
 
+# Add local bin to PATH for the appuser
+ENV PATH="/home/appuser/.local/bin:$PATH"
+
+# Set Hugging Face cache environment variables
+ENV HF_HOME="/home/appuser/.cache/huggingface"
+ENV HUGGINGFACE_HUB_CACHE="/home/appuser/.cache/huggingface/hub"
+ENV HF_HUB_OFFLINE=0
+
 WORKDIR /home/appuser
 
 COPY --chown=appuser:appuser . .
