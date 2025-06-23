@@ -1,0 +1,53 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Build artifacts
+*.egg-info/
+universalagent.egg-info/
+build/
+dist/
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Development files
+.pytest_cache/
+.coverage
+.mypy_cache/
+
+# Local environment & config files
+.env
+.env.local
+
+# Logs & temp files
+*.log
+*.gz
+*.tgz
+.tmp
+.cache
+
+# Docker artifacts
+Dockerfile*
+.dockerignore
+
+outbound-trunk.json
