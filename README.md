@@ -42,13 +42,18 @@ $ pip install -e .[dev]
 $ cp .env.example .env
 ```
 
+Download the files
+```bash
+python main.py download-files
+```
+
 Run the default assistant in **dev** mode:
 
 ```bash
-$ python universal_agent.py dev
+$ python main.py dev
 ```
 
-The agent registers with LiveKit under the ID defined in `universal_agent.py` and is ready to accept calls.
+The agent registers with LiveKit under the ID defined in `main.py` and is ready to accept calls.
 
 ## explain Agent configuration
 
@@ -134,7 +139,7 @@ Memories are stored in Mem0 and automatically summarised when they exceed `summa
 Copy one of these, tweak, then launch with:
 Start and Register the worker with livekit server
 ```bash
-python universal_agent.py dev
+python main.py dev
 ```
 
 Dispatch the agent:
