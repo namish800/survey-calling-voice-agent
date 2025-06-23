@@ -1,6 +1,6 @@
 # This is an example Dockerfile that builds a minimal container for running LK Agents
 # syntax=docker/dockerfile:1
-ARG PYTHON_VERSION=3.11.6
+ARG PYTHON_VERSION=3.12.2
 FROM python:${PYTHON_VERSION}-slim
 
 # Keeps Python from buffering stdout and stderr to avoid situations where
@@ -33,16 +33,15 @@ RUN chown -R appuser /home/appuser/.cache
 
 WORKDIR /home/appuser
 
-COPY requirements.txt .
-RUN python -m pip install --user --no-cache-dir -r requirements.txt
-
-COPY . .
+COPY --chown=appuser:appuser . .
+RUN find . -name "*.egg-info" -type d -exec rm -rf {} + 2>/dev/null || true
+RUN python -m pip install --user --no-cache-dir .
 
 # ensure that any dependent models are downloaded at build-time
-RUN python universal_agent.py download-files
+RUN python main.py download-files
 
 # expose healthcheck port
 EXPOSE 8081
 
 # Run the application.
-CMD ["python", "universal_agent.py", "start"]
+CMD ["python", "main.py", "start"]

@@ -7,7 +7,6 @@ name = "universalagent"
 version = "1.0.0"
 description = "A flexible, configuration-driven voice AI agent system built on LiveKit"
 authors = [{name = "Namish Pruthi", email = "namishpruthi800@gmail.com"}]
-license = {text = "MIT"}
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [

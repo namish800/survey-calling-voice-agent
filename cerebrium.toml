@@ -3,7 +3,7 @@ name = "cerebrium"
 python_version = "3.11"
 docker_base_image_url = "debian:bookworm-slim"
 disable_auth = false
-include = ['./*', 'universal_agent.py', 'cerebrium.toml']
+include = ['./*', 'main.py', 'cerebrium.toml']
 exclude = ['.*']
 
 [cerebrium.hardware]
