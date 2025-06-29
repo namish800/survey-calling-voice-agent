@@ -2,6 +2,7 @@ import asyncio
 from dataclasses import dataclass
 import logging
 import os
+from typing import List, Optional
 
 from kb_retriever import RetrievalResult
 from kb_retriever.models.retrieval import (
@@ -32,6 +33,7 @@ class RAGToolConfig:
     embedding_model: str = "text-embedding-ada-002"
     similarity_top_k: int = 5
     similarity_threshold: float = 0.7
+    knowledge_base_ids: Optional[List[str]] = None
 
 
 class LlamaIndexPineconeRagTool:
@@ -51,11 +53,12 @@ class LlamaIndexPineconeRagTool:
                 )
             )
 
-            # Initialize Pinecone vector store
+            # Initialize Pinecone vector store 
+            # TODO: Add namespace support
             pc = Pinecone(api_key=self.config.pinecone_api_key)
             pinecone_index = pc.Index(self.config.index_name)
             vector_store = PineconeVectorStore(
-                pinecone_index=pinecone_index, namespace=self.config.namespace
+                pinecone_index=pinecone_index
             )
 
             # Initialize retrieval pipeline
@@ -84,6 +87,7 @@ class LlamaIndexPineconeRagTool:
                 query=query,
                 similarity_top_k=self.config.similarity_top_k,
                 similarity_threshold=self.config.similarity_threshold,
+                knowledge_base_ids=self.config.knowledge_base_ids,
             )
 
             # Retrieve relevant content

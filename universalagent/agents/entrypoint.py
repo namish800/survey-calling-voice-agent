@@ -273,6 +273,7 @@ def initialize_tools(
             embedding_model=os.getenv("EMBEDDING_MODEL"),
             similarity_top_k=int(os.getenv("SIMILARITY_TOP_K", 3)),
             similarity_threshold=float(os.getenv("SIMILARITY_THRESHOLD", 0.7)),
+            knowledge_base_ids=config.rag_config.knowledge_base_ids,
         )
         rag_tool = LlamaIndexPineconeRagTool(rag_tool_config)
         tools.append(rag_tool.get_rag_tool())
@@ -305,7 +306,7 @@ def create_worker_options(entrypoint_func: Optional[Callable] = None) -> agents.
 
     entrypoint = entrypoint_func or configurable_agent_entrypoint
 
-    agent_name = os.getenv("AGENT_NAME", "base_agent")
+    agent_name = os.getenv("AGENT_NAME", "local_agent")
     return agents.WorkerOptions(
         entrypoint_fnc=entrypoint,
         agent_name=agent_name,
