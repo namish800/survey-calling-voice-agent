@@ -26,7 +26,7 @@ from tools.memory.memory_management_tools import MemoryManagementTool
 from transcripts.models import TranscriptMetadata
 
 from universalagent.core.config import AgentConfig
-from universalagent.core.config_loader import load_config_by_id
+from universalagent.core.config_loader import load_config_by_id, load_config_from_supabase
 from universalagent.components.factory import ComponentFactory, ComponentCreationError
 from universalagent.agents.configurable_agent import ConfigurableAgent
 from universalagent.tools.call_management_tools import BUILT_IN_TOOLS
@@ -56,7 +56,7 @@ async def configurable_agent_entrypoint(ctx: JobContext) -> None:
     logger.info(f"Parsed metadata: {meta}")
 
     # Load configuration
-    config = load_config_by_id(meta.agent_id)
+    config = load_config_from_supabase(meta.agent_id)
 
     if not config:
         logger.error(f"Failed to load configuration for agent: {meta.agent_id}")
@@ -305,8 +305,9 @@ def create_worker_options(entrypoint_func: Optional[Callable] = None) -> agents.
 
     entrypoint = entrypoint_func or configurable_agent_entrypoint
 
+    agent_name = os.getenv("AGENT_NAME", "base_agent")
     return agents.WorkerOptions(
         entrypoint_fnc=entrypoint,
-        agent_name="base_agent",
+        agent_name=agent_name,
         prewarm_fnc=prewarm_fnc,
     )
