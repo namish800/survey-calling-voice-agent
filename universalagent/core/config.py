@@ -207,6 +207,12 @@ class WebhookConfig:
 
 
 @dataclass
+class McpConfig:
+    """Configuration for MCP servers."""
+    url: str
+    headers: Optional[Dict[str, str]] = None
+
+@dataclass
 class AgentConfig:
     """Main configuration for a configurable agent."""
 
@@ -239,6 +245,9 @@ class AgentConfig:
 
     # Tools & Capabilities
     tools: List[ToolConfig] = field(default_factory=list)
+
+    # MCP Servers
+    mcp_servers: List[McpConfig] = field(default_factory=list)
 
     # evaluation criteria
     evaluation_criteria: List[EvaluationCriteria] = field(default_factory=list)
@@ -325,6 +334,11 @@ class AgentConfig:
         for tool_data in data.get("tools", []):
             tools.append(ToolConfig(**tool_data))
 
+        # Parse MCP servers
+        mcp_servers = []
+        for mcp_data in data.get("mcp_servers", []):
+            mcp_servers.append(McpConfig(**mcp_data))
+
         # Parse webhooks
         evaluation_webhook = None
         if data.get("evaluation_webhook"):
@@ -365,6 +379,7 @@ class AgentConfig:
             silence_timeout=data.get("silence_timeout"),
             interruption_handling=data.get("interruption_handling", True),
             noise_cancellation=data.get("noise_cancellation", "BVC"),
+            mcp_servers=mcp_servers,
         )
 
     @classmethod

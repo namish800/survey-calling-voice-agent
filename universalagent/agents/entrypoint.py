@@ -14,7 +14,7 @@ from typing import List, Optional, Dict, Any, Callable
 from universalagent.agents.handler.silencetimeouthandler import SilenceTimeoutHandler
 from universalagent.events.event_sender import EventSender
 from livekit import agents
-from livekit.agents import AgentSession, RoomInputOptions, JobContext
+from livekit.agents import AgentSession, RoomInputOptions, JobContext, mcp
 from livekit.agents import BackgroundAudioPlayer, AudioConfig, BuiltinAudioClip
 from livekit.agents import metrics, MetricsCollectedEvent
 from livekit.agents import JobProcess
@@ -157,6 +157,9 @@ async def start_agent_session(ctx: JobContext, config: AgentConfig, meta: CallMe
             "memory_manager": ctx.proc.userdata.get("memory_manager"),
         }
 
+        # create mcp servers
+        mcp_servers = [mcp.MCPServerHTTP(url=mcp_server.url, headers=mcp_server.headers) for mcp_server in config.mcp_servers]
+
         # Create AgentSession
         session = AgentSession(
             stt=stt,
@@ -165,6 +168,7 @@ async def start_agent_session(ctx: JobContext, config: AgentConfig, meta: CallMe
             vad=ctx.proc.userdata["vad"],
             turn_detection=turn_detection,
             userdata=session_userdata,
+            mcp_servers=mcp_servers,
         )
 
         # Create room input options with noise cancellation
