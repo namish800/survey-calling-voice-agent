@@ -9,8 +9,8 @@ from datetime import datetime
 
 from livekit.agents import JobContext, AgentSession
 from livekit.agents.metrics.usage_collector import UsageSummary
-from transcripts.formatters import MarkdownFormatter
-from transcripts.models import (
+from universalagent.transcripts.formatters import MarkdownFormatter
+from universalagent.transcripts.models import (
     Transcript,
     TranscriptMessage,
     TranscriptMetadata,

@@ -10,7 +10,7 @@ import logging
 from typing import Dict, Any, Optional, List
 from pathlib import Path
 import jinja2
-from tools.tool_holder import ToolHolder
+from universalagent.tools.tool_holder import ToolHolder
 
 from universalagent.core.config import AgentConfig
 

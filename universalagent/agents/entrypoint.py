@@ -11,8 +11,8 @@ import json
 import logging
 from typing import List, Optional, Dict, Any, Callable
 
-from agents.handler.silencetimeouthandler import SilenceTimeoutHandler
-from events.event_sender import EventSender
+from universalagent.agents.handler.silencetimeouthandler import SilenceTimeoutHandler
+from universalagent.events.event_sender import EventSender
 from livekit import agents
 from livekit.agents import AgentSession, RoomInputOptions, JobContext
 from livekit.agents import BackgroundAudioPlayer, AudioConfig, BuiltinAudioClip
@@ -22,8 +22,8 @@ from livekit.agents import JobProcess
 
 # Import optional noise cancellation
 from livekit.plugins import noise_cancellation, silero
-from tools.memory.memory_management_tools import MemoryManagementTool
-from transcripts.models import TranscriptMetadata
+from universalagent.tools.memory.memory_management_tools import MemoryManagementTool
+from universalagent.transcripts.models import TranscriptMetadata
 
 from universalagent.core.config import AgentConfig
 from universalagent.core.config_loader import load_config_by_id, load_config_from_supabase
