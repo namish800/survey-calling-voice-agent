@@ -5,6 +5,7 @@ This module provides a clean, template-driven approach for generating voice agen
 system instructions following the ElevenLabs six building blocks methodology.
 """
 
+import datetime
 import logging
 from typing import Dict, Any, Optional, List
 from pathlib import Path
@@ -86,6 +87,7 @@ class InstructionTemplate:
         Returns:
             Context dictionary for template rendering
         """
+        now = datetime.datetime.now(datetime.timezone.utc)
         context = {
             # Basic agent information
             "user_instructions": config.system_instructions,
@@ -93,6 +95,7 @@ class InstructionTemplate:
             "context": config.initial_context,
             "tools": tools,
             "memory_enabled": config.memory_config.enabled,
+            "now": now,
         }
 
         # Add any additional context items

@@ -1,7 +1,7 @@
 from typing import Callable, Optional, Any, Awaitable
 import asyncio
 import logging
-from livekit.agents import function_tool, RunContext
+from livekit.agents import function_tool, RunContext, FunctionTool
 
 
 logger = logging.getLogger(__name__)
@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 class ToolHolder:
     def __init__(
         self,
-        fnc: Callable,
+        fnc: Callable | FunctionTool,
         name: Optional[str] = None,
         description: Optional[str] = None,
         usage_instructions_llm: str = "",
@@ -29,6 +29,8 @@ class ToolHolder:
 
     @property
     def livekit_tool(self):
+        if isinstance(self.fnc, FunctionTool):
+            return self.fnc
         return function_tool(
             self.fnc,
             name=self.name,

@@ -29,7 +29,7 @@ from universalagent.core.config import AgentConfig
 from universalagent.core.config_loader import load_config_by_id, load_config_from_supabase
 from universalagent.components.factory import ComponentFactory, ComponentCreationError
 from universalagent.agents.configurable_agent import ConfigurableAgent
-from universalagent.tools.call_management_tools import BUILT_IN_TOOLS
+from tools.built_in_tools import BUILT_IN_TOOLS
 from universalagent.tools.knowledge.rag_tool import LlamaIndexPineconeRagTool, RAGToolConfig
 from universalagent.tools.tool_holder import ToolHolder
 from universalagent.agents.metadata import CallMetadata
@@ -259,8 +259,9 @@ def initialize_tools(
 ) -> List[ToolHolder]:
     """Initialize tools based on configuration."""
     tools = []
-    # Add built-in tools
-    tools.extend(list(BUILT_IN_TOOLS.values()))
+    # Add all the built-in tools
+    tools.extend(BUILT_IN_TOOLS["call_management"])
+    tools.extend(BUILT_IN_TOOLS["time_management"])
 
     # Add RAG tool
     if config.rag_config and config.rag_config.enabled:

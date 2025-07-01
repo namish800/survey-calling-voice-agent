@@ -11,6 +11,7 @@ readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
     "livekit-agents>=0.10.0",
+    "livekit-agents[mcp]",
     "livekit-plugins-openai>=0.9.0",
     "livekit-plugins-elevenlabs>=0.6.0",
     "livekit-plugins-deepgram>=0.5.0",
@@ -33,7 +34,8 @@ dependencies = [
     "anthropic>=0.25.0",
     "mem0ai",
     "supabase>=2.3.0",
-    "torch"
+    "torch",
+    "pytz>=2023.3"
 ]
 
 [project.optional-dependencies]
