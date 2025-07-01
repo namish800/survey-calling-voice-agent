@@ -29,7 +29,7 @@ from universalagent.core.config import AgentConfig
 from universalagent.core.config_loader import load_config_by_id, load_config_from_supabase
 from universalagent.components.factory import ComponentFactory, ComponentCreationError
 from universalagent.agents.configurable_agent import ConfigurableAgent
-from tools.built_in_tools import BUILT_IN_TOOLS
+from universalagent.tools.built_in_tools import BUILT_IN_TOOLS
 from universalagent.tools.knowledge.rag_tool import LlamaIndexPineconeRagTool, RAGToolConfig
 from universalagent.tools.tool_holder import ToolHolder
 from universalagent.agents.metadata import CallMetadata
