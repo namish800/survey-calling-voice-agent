@@ -26,10 +26,10 @@ from universalagent.tools.memory.memory_management_tools import MemoryManagement
 from universalagent.transcripts.models import TranscriptMetadata
 
 from universalagent.core.config import AgentConfig
-from universalagent.core.config_loader import load_config_by_id
+from universalagent.core.config_loader import load_config_by_id, load_config_from_supabase
 from universalagent.components.factory import ComponentFactory, ComponentCreationError
 from universalagent.agents.configurable_agent import ConfigurableAgent
-from universalagent.tools.call_management_tools import BUILT_IN_TOOLS
+from universalagent.tools.built_in_tools import BUILT_IN_TOOLS
 from universalagent.tools.knowledge.rag_tool import LlamaIndexPineconeRagTool, RAGToolConfig
 from universalagent.tools.tool_holder import ToolHolder
 from universalagent.agents.metadata import CallMetadata
@@ -56,7 +56,7 @@ async def configurable_agent_entrypoint(ctx: JobContext) -> None:
     logger.info(f"Parsed metadata: {meta}")
 
     # Load configuration
-    config = load_config_by_id(meta.agent_id)
+    config = load_config_from_supabase(meta.agent_id)
 
     if not config:
         logger.error(f"Failed to load configuration for agent: {meta.agent_id}")
@@ -259,8 +259,9 @@ def initialize_tools(
 ) -> List[ToolHolder]:
     """Initialize tools based on configuration."""
     tools = []
-    # Add built-in tools
-    tools.extend(list(BUILT_IN_TOOLS.values()))
+    # Add all the built-in tools
+    tools.extend(BUILT_IN_TOOLS["call_management"])
+    tools.extend(BUILT_IN_TOOLS["time_management"])
 
     # Add RAG tool
     if config.rag_config and config.rag_config.enabled:
@@ -273,6 +274,7 @@ def initialize_tools(
             embedding_model=os.getenv("EMBEDDING_MODEL"),
             similarity_top_k=int(os.getenv("SIMILARITY_TOP_K", 3)),
             similarity_threshold=float(os.getenv("SIMILARITY_THRESHOLD", 0.7)),
+            knowledge_base_ids=config.rag_config.knowledge_base_ids,
         )
         rag_tool = LlamaIndexPineconeRagTool(rag_tool_config)
         tools.append(rag_tool.get_rag_tool())
@@ -305,8 +307,9 @@ def create_worker_options(entrypoint_func: Optional[Callable] = None) -> agents.
 
     entrypoint = entrypoint_func or configurable_agent_entrypoint
 
+    agent_name = os.getenv("AGENT_NAME", "local_agent")
     return agents.WorkerOptions(
         entrypoint_fnc=entrypoint,
-        agent_name="base_agent",
+        agent_name=agent_name,
         prewarm_fnc=prewarm_fnc,
     )

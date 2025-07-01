@@ -16,6 +16,7 @@ class QueryRequest:
     metadata_filters: Optional[Dict[str, Any]] = None
     namespace: Optional[str] = None
     query_mode: str = "default"  # "default", "sparse", "hybrid"
+    knowledge_base_ids: Optional[List[str]] = None
     
     def __post_init__(self):
         """Validate query request parameters."""

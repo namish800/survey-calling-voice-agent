@@ -135,6 +135,7 @@ class RAGConfig:
 
     enabled: bool = False
     namespace: Optional[str] = None
+    knowledge_base_ids: Optional[List[str]] = None
 
 
 @dataclass

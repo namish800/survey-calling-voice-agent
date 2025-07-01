@@ -11,8 +11,8 @@ import logging
 from pathlib import Path
 from typing import Dict, Any, Optional, List
 import aiohttp
-
-from .config import AgentConfig
+from supabase import create_client
+from universalagent.core.config import AgentConfig
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +74,44 @@ class ConfigurationLoader:
 
         logger.info(f"Looking for configuration: {config_file}")
         return self.load_from_file(str(config_file))
+    
 
+class AgentConfigLoaderFromSupabase:
+    """Utility class for loading agent configurations from Supabase."""
+
+    def __init__(self, supabase_url: str, supabase_key: str):
+        """Initialize agent configuration loader from Supabase.
+        
+        Args:
+            supabase_url: Supabase project URL
+            supabase_key: Supabase API key (anon key)
+        """
+        self.supabase = create_client(supabase_url, supabase_key)
+
+    def load_by_agent_id(self, agent_id: str) -> Optional[AgentConfig]:
+        """Load agent configuration by agent ID.
+        
+        Args:
+            agent_id: Unique identifier for the agent
+            
+        Returns:
+            AgentConfig instance or None if not found
+        """
+        try:
+            logger.info(f"Loading configuration for agent_id: {agent_id}")
+            response = self.supabase.table('agent_configurations').select('config').eq('agent_id', agent_id).single().execute()
+            logger.info(f"Response: {response}")
+
+            if response.data and response.data.get('config'):
+                logger.info(f"Loaded configuration for agent_id: {agent_id}")
+                return AgentConfig.from_dict(response.data['config'])
+            else:
+                logger.warning(f"No configuration found for agent_id: {agent_id}")
+                return None
+                
+        except Exception as e:
+            logger.error(f"Error loading configuration for agent_id {agent_id}: {e}")
+            return None
 
 # Convenience functions for common operations
 def load_config_from_file(file_path: str) -> Optional[AgentConfig]:
@@ -84,6 +121,50 @@ def load_config_from_file(file_path: str) -> Optional[AgentConfig]:
 
 
 def load_config_by_id(agent_id: str) -> Optional[AgentConfig]:
-    """Load configuration by agent ID."""
+    """Load configuration by agent ID from file system."""
     loader = ConfigurationLoader()
     return loader.load_by_agent_id(agent_id)
+
+
+def load_config_from_supabase(agent_id: str, supabase_url: Optional[str] = None, supabase_key: Optional[str] = None) -> Optional[AgentConfig]:
+    """Load configuration by agent ID from Supabase.
+    
+    Args:
+        agent_id: Unique identifier for the agent
+        supabase_url: Supabase project URL (defaults to SUPABASE_URL env var)
+        supabase_key: Supabase API key (defaults to SUPABASE_ANON_KEY env var)
+    
+    Returns:
+        AgentConfig instance or None if not found
+    """
+    if not supabase_url:
+        supabase_url = os.getenv("SUPABASE_URL")
+    if not supabase_key:
+        supabase_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+    
+    if not supabase_url or not supabase_key:
+        raise ValueError("Supabase URL and key must be provided or set as environment variables")
+    
+    loader = AgentConfigLoaderFromSupabase(supabase_url, supabase_key)
+    return loader.load_by_agent_id(agent_id)
+
+
+def create_supabase_loader(supabase_url: Optional[str] = None, supabase_key: Optional[str] = None) -> AgentConfigLoaderFromSupabase:
+    """Create a Supabase loader with environment variable fallbacks.
+    
+    Args:
+        supabase_url: Supabase project URL (defaults to SUPABASE_URL env var)
+        supabase_key: Supabase API key (defaults to SUPABASE_ANON_KEY env var)
+    
+    Returns:
+        AgentConfigLoaderFromSupabase instance
+    """
+    if not supabase_url:
+        supabase_url = os.getenv("SUPABASE_URL")
+    if not supabase_key:
+        supabase_key = os.getenv("SUPABASE_ANON_KEY")
+    
+    if not supabase_url or not supabase_key:
+        raise ValueError("Supabase URL and key must be provided or set as environment variables")
+    
+    return AgentConfigLoaderFromSupabase(supabase_url, supabase_key)

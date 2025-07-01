@@ -1,9 +1,16 @@
 """LlamaIndex-based document retrieval from Pinecone vector store."""
 
+import asyncio
+import os
 import time
 from typing import List, Optional
 
 from llama_index.core import VectorStoreIndex
+from llama_index.core.vector_stores import (
+    MetadataFilter,
+    MetadataFilters,
+    FilterOperator,
+)
 from llama_index.core.retrievers import VectorIndexRetriever
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.vector_stores import VectorStoreQuery
@@ -13,6 +20,7 @@ from pinecone import Pinecone
 
 from kb_retriever.interfaces.retrieval import IRetrievalPipeline
 from kb_retriever.models.retrieval import (
+    EmbeddingConfig,
     QueryRequest,
     RetrievalResult,
     RetrievedChunk,
@@ -70,13 +78,25 @@ class LlamaIndexDocumentRetrievalFromPinecone(IRetrievalPipeline):
                     processing_time_seconds=time.time() - start_time,
                 )
             
+            filters = None
+            if request.knowledge_base_ids:
+                filters = MetadataFilters(
+                    filters=[
+                        MetadataFilter(
+                            key="kb_key", operator=FilterOperator.IN, value=request.knowledge_base_ids
+                        )
+                    ]
+                )
+            
+            print(f"Filters: {filters}")
             # Configure retriever with request parameters
             retriever = VectorIndexRetriever(
                 index=self.vector_index,
                 similarity_top_k=request.similarity_top_k,
                 vector_store_query_mode=request.query_mode,
+                filters=filters,
             )
-            
+
             # Perform retrieval
             nodes_with_scores = await retriever.aretrieve(request.query)
             
@@ -205,4 +225,38 @@ class LlamaIndexDocumentRetrievalFromPinecone(IRetrievalPipeline):
             
             retrieved_nodes.append(retrieved_node)
         
-        return retrieved_nodes 
+        return retrieved_nodes
+
+
+if __name__ == "__main__":
+    from dotenv import load_dotenv
+    load_dotenv()
+
+    config = RetrievalConfig(
+        embedding_config=EmbeddingConfig(
+            api_key=os.getenv("OPENAI_API_KEY"),
+            model_name=os.getenv("EMBEDDING_MODEL"),
+        )
+    )
+
+    pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
+    pinecone_index = pc.Index(os.getenv("PINECONE_INDEX_NAME"))
+    vector_store = PineconeVectorStore(
+        pinecone_index=pinecone_index
+    )
+
+    retriever = LlamaIndexDocumentRetrievalFromPinecone(config, vector_store)
+
+    async def main():
+        request = QueryRequest(query="Best practices for agentic prompting with Gemini",
+                            similarity_top_k=5,
+                            similarity_threshold=0.7,
+                            query_mode="default",
+                            knowledge_base_ids=[18]
+        )
+        
+        result = await retriever.retrieve(request)
+        print(result)
+
+    asyncio.run(main())
+

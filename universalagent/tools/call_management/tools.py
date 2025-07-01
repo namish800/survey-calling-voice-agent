@@ -1,15 +1,6 @@
-"""
-Built-in call management tools for configurable agents.
-
-These tools handle basic call flow operations like ending calls,
-handling busy responses, and scheduling callbacks.
-"""
-
 import logging
-from typing import Optional, Dict, Any
 
-from livekit.agents import function_tool
-from livekit import rtc, api
+from livekit import api
 from livekit.agents import get_job_context, RunContext
 
 from universalagent.tools.tool_holder import ToolHolder
@@ -42,8 +33,7 @@ async def end_call(ctx: RunContext, reason: str = "completed") -> str:
         logger.error(f"Error ending call: {e}")
         await job_ctx.room.disconnect()
 
+call_management_tools = [
+    ToolHolder(end_call, usage_instructions_llm="Use this tool when you want to end the call. You can specify a reason for ending the call (completed, busy, error, etc.)."),
+]
 
-# Registry of all built-in tools
-BUILT_IN_TOOLS = {
-    "end_call": ToolHolder(end_call),
-}
