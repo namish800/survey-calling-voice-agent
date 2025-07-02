@@ -9,10 +9,12 @@ import asyncio
 import os
 import json
 import logging
+from datetime import datetime
 from typing import List, Optional, Dict, Any, Callable
 
 from universalagent.agents.handler.silencetimeouthandler import SilenceTimeoutHandler
 from universalagent.events.event_sender import EventSender
+from universalagent.events.turn_latency_tracker import setup_turn_latency_tracking
 from livekit import agents
 from livekit.agents import AgentSession, RoomInputOptions, JobContext, mcp
 from livekit.agents import BackgroundAudioPlayer, AudioConfig, BuiltinAudioClip
@@ -85,6 +87,9 @@ async def start_agent_session(ctx: JobContext, config: AgentConfig, meta: CallMe
             phone_number=meta.phone_number,
         )
         usage_collector = metrics.UsageCollector()
+        
+        # Set up turn latency tracking for granular per-turn metrics
+        turn_latency_tracker = None
 
         memory_tool = None
         if config.memory_config and config.memory_config.enabled:
@@ -111,6 +116,35 @@ async def start_agent_session(ctx: JobContext, config: AgentConfig, meta: CallMe
             await event_sender.send_transcript(session, transcript_metadata)
             summary = usage_collector.get_summary()
             await event_sender.send_metrics(summary, meta.to_dict())
+            
+            # Send turn latency metrics if tracker is available
+            if turn_latency_tracker:
+                session_stats = turn_latency_tracker.get_session_stats()
+                all_turns = turn_latency_tracker.export_all_turns()
+                
+                # Log session latency statistics
+                logger.info("📈 SESSION LATENCY STATISTICS:")
+                logger.info(f"   Total Turns: {session_stats.get('total_turns', 0)}")
+                if 'average_response_latency' in session_stats:
+                    logger.info(f"   Average Response Latency: {session_stats['average_response_latency']:.3f}s")
+                    logger.info(f"   Average STT Duration: {session_stats['average_stt_duration']:.3f}s")
+                    logger.info(f"   Average EOU Delay: {session_stats['average_eou_delay']:.3f}s")
+                    logger.info(f"   Average LLM TTFT: {session_stats['average_llm_ttft']:.3f}s")
+                    logger.info(f"   Average TTS TTFB: {session_stats['average_tts_ttfb']:.3f}s")
+                    logger.info(f"   Min Response Latency: {session_stats['min_response_latency']:.3f}s")
+                    logger.info(f"   Max Response Latency: {session_stats['max_response_latency']:.3f}s")
+                
+                # Send detailed turn metrics to webhook if enabled
+                if os.getenv("COMPLETION_WEBHOOK_URL"):
+                    latency_payload = {
+                        "event_type": "turn_latency_metrics",
+                        "timestamp": datetime.now().isoformat(),
+                        "session_stats": session_stats,
+                        "all_turns": all_turns,
+                        "metadata": meta.to_dict()
+                    }
+                    await event_sender.send_payload(latency_payload)
+            
             await event_sender.aclose()
 
         ctx.add_shutdown_callback(event_sender_shutdown_callback)
@@ -185,6 +219,10 @@ async def start_agent_session(ctx: JobContext, config: AgentConfig, meta: CallMe
             room_input_options=room_input_options,
         )
 
+        # Set up turn latency tracking after session is started (if enabled)
+        turn_latency_tracker = setup_turn_latency_tracking(session)
+        logger.info("🔍 Turn latency tracking enabled - capturing STT, EOU, LLM TTFT, and TTS TTFB per turn")
+    
         # Silence timeout in seconds
         silence_timeout = config.silence_timeout or 10
         silence_handler = SilenceTimeoutHandler(session, timeout_seconds=silence_timeout)
