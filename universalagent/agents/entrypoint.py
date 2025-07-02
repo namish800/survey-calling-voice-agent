@@ -125,8 +125,20 @@ async def start_agent_session(ctx: JobContext, config: AgentConfig, meta: CallMe
                 # Log session latency statistics
                 logger.debug("📈 SESSION LATENCY STATISTICS:")
                 logger.debug(f"   Total Turns: {session_stats.get('total_turns', 0)}")
+                logger.debug(f"   Completed Turns: {session_stats.get('completed_turns', 0)}")
+                logger.debug(f"   Interrupted Turns: {session_stats.get('interrupted_turns', 0)}")
+                
+                interruption_rate = session_stats.get('interruption_rate', 0)
+                logger.debug(f"   Interruption Rate: {interruption_rate:.1%}")
+                
+                # Show interruption breakdown if available
+                if 'interruption_breakdown' in session_stats:
+                    logger.debug("   Interruption Breakdown:")
+                    for stage, count in session_stats['interruption_breakdown'].items():
+                        logger.debug(f"     - {stage}: {count}")
+                
                 if 'average_response_latency' in session_stats:
-                    logger.debug(f"   Average Response Latency: {session_stats['average_response_latency']:.3f}s")
+                    logger.debug(f"   Average Response Latency (completed): {session_stats['average_response_latency']:.3f}s")
                     logger.debug(f"   Average STT Duration: {session_stats['average_stt_duration']:.3f}s")
                     logger.debug(f"   Average EOU Delay: {session_stats['average_eou_delay']:.3f}s")
                     logger.debug(f"   Average LLM TTFT: {session_stats['average_llm_ttft']:.3f}s")
