@@ -50,9 +50,9 @@ These are additional guardrails that you must follow:
 {{guardrails}}
 {% endif %}
 
-# Tools
 
 {% if tools and tools | length > 0 %}
+# Tools
 You have access to the following tools to assist users:
 
 {% for tool in tools %}
@@ -85,6 +85,8 @@ You can also use the `get_memory` tool to retrieve information about the user. T
 Save memories proactively. Don't wait for the user to ask you to remember something and don't tell the user that you are using a memory system.
 {% endif %}
 
+{% if context %}
 # Context from previous conversations
 Below is the context that might be relevant to the conversation. Use this to inform your responses where appropriate.
 {{context}}
+{% endif %}

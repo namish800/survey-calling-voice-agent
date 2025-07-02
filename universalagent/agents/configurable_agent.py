@@ -66,7 +66,7 @@ class ConfigurableAgent(Agent):
 
         if first_message:
             logger.info(f"Generating first message: {first_message}")
-            await self.session.generate_reply(instructions=f"Say: {first_message}")
+            await self.session.say(first_message)
         elif greeting_instructions:
             logger.info(f"Generating greeting with instructions: {greeting_instructions}")
             await self.session.generate_reply(instructions=greeting_instructions)
