@@ -123,16 +123,16 @@ async def start_agent_session(ctx: JobContext, config: AgentConfig, meta: CallMe
                 all_turns = turn_latency_tracker.export_all_turns()
                 
                 # Log session latency statistics
-                logger.info("📈 SESSION LATENCY STATISTICS:")
-                logger.info(f"   Total Turns: {session_stats.get('total_turns', 0)}")
+                logger.debug("📈 SESSION LATENCY STATISTICS:")
+                logger.debug(f"   Total Turns: {session_stats.get('total_turns', 0)}")
                 if 'average_response_latency' in session_stats:
-                    logger.info(f"   Average Response Latency: {session_stats['average_response_latency']:.3f}s")
-                    logger.info(f"   Average STT Duration: {session_stats['average_stt_duration']:.3f}s")
-                    logger.info(f"   Average EOU Delay: {session_stats['average_eou_delay']:.3f}s")
-                    logger.info(f"   Average LLM TTFT: {session_stats['average_llm_ttft']:.3f}s")
-                    logger.info(f"   Average TTS TTFB: {session_stats['average_tts_ttfb']:.3f}s")
-                    logger.info(f"   Min Response Latency: {session_stats['min_response_latency']:.3f}s")
-                    logger.info(f"   Max Response Latency: {session_stats['max_response_latency']:.3f}s")
+                    logger.debug(f"   Average Response Latency: {session_stats['average_response_latency']:.3f}s")
+                    logger.debug(f"   Average STT Duration: {session_stats['average_stt_duration']:.3f}s")
+                    logger.debug(f"   Average EOU Delay: {session_stats['average_eou_delay']:.3f}s")
+                    logger.debug(f"   Average LLM TTFT: {session_stats['average_llm_ttft']:.3f}s")
+                    logger.debug(f"   Average TTS TTFB: {session_stats['average_tts_ttfb']:.3f}s")
+                    logger.debug(f"   Min Response Latency: {session_stats['min_response_latency']:.3f}s")
+                    logger.debug(f"   Max Response Latency: {session_stats['max_response_latency']:.3f}s")
                 
                 # Send detailed turn metrics to webhook if enabled
                 if os.getenv("COMPLETION_WEBHOOK_URL"):
@@ -141,7 +141,7 @@ async def start_agent_session(ctx: JobContext, config: AgentConfig, meta: CallMe
                         "timestamp": datetime.now().isoformat(),
                         "session_stats": session_stats,
                         "all_turns": all_turns,
-                        "metadata": meta.to_dict()
+                        "metadata": meta.to_dict(),
                     }
                     await event_sender.send_payload(latency_payload)
             

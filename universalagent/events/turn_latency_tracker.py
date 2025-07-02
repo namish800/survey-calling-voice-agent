@@ -108,7 +108,7 @@ class TurnLatencyTracker:
             start_timestamp=time.time()
         )
         
-        logger.info(f"🔄 Started tracking turn: {turn_id}")
+        logger.debug(f"🔄 Started tracking turn: {turn_id}")
         return turn_id
     
     def update_stt_metrics(self, stt_metrics: STTMetrics):
@@ -186,13 +186,13 @@ class TurnLatencyTracker:
     
     def log_turn_summary(self, turn: TurnLatencyMetrics):
         """Log detailed turn latency summary."""
-        logger.info(f"📊 TURN LATENCY SUMMARY - {turn.turn_id}")
-        logger.info(f"   📝 STT Duration: {turn.stt_duration:.3f}s" if turn.stt_duration else "   📝 STT Duration: N/A")
-        logger.info(f"   🎯 EOU Detection Delay: {turn.eou_end_of_utterance_delay:.3f}s" if turn.eou_end_of_utterance_delay else "   🎯 EOU Detection Delay: N/A")
-        logger.info(f"   🧠 LLM Time to First Token: {turn.llm_ttft:.3f}s" if turn.llm_ttft else "   🧠 LLM TTFT: N/A")
-        logger.info(f"   🎤 TTS Time to First Byte: {turn.tts_ttfb:.3f}s" if turn.tts_ttfb else "   🎤 TTS TTFB: N/A")
-        logger.info(f"   ⏱️  TOTAL RESPONSE LATENCY: {turn.total_response_latency:.3f}s" if turn.total_response_latency else "   ⏱️  TOTAL RESPONSE LATENCY: Incomplete")
-        logger.info(f"   ────────────────────────────────")
+        logger.debug(f"📊 TURN LATENCY SUMMARY - {turn.turn_id}")
+        logger.debug(f"   📝 STT Duration: {turn.stt_duration:.3f}s" if turn.stt_duration else "   📝 STT Duration: N/A")
+        logger.debug(f"   🎯 EOU Detection Delay: {turn.eou_end_of_utterance_delay:.3f}s" if turn.eou_end_of_utterance_delay else "   🎯 EOU Detection Delay: N/A")
+        logger.debug(f"   🧠 LLM Time to First Token: {turn.llm_ttft:.3f}s" if turn.llm_ttft else "   🧠 LLM TTFT: N/A")
+        logger.debug(f"   🎤 TTS Time to First Byte: {turn.tts_ttfb:.3f}s" if turn.tts_ttfb else "   🎤 TTS TTFB: N/A")
+        logger.debug(f"   ⏱️  TOTAL RESPONSE LATENCY: {turn.total_response_latency:.3f}s" if turn.total_response_latency else "   ⏱️  TOTAL RESPONSE LATENCY: Incomplete")
+        logger.debug(f"   ────────────────────────────────")
     
     def get_turn_metrics(self, turn_id: str) -> Optional[TurnLatencyMetrics]:
         """Get metrics for a specific turn."""

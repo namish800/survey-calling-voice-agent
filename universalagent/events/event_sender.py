@@ -97,6 +97,13 @@ class EventSender:
             logger.error(f"Error sending transcript: {e}")
             return False
 
+    async def send_payload(self, payload: Dict[str, Any]) -> bool:
+        """Send payload to webhook."""
+        if not self.metrics_client:
+            logger.info("No metrics webhook configured")
+            return False
+        return await self.metrics_client.send_payload(payload)
+
     async def send_metrics(self, usage: UsageSummary, metadata: Dict[str, Any]) -> bool:
         """Send metrics data from LiveKit UsageSummary.
 
