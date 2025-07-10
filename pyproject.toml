@@ -20,6 +20,7 @@ dependencies = [
     "livekit-plugins-turn-detector>=0.8.0",
     "livekit-plugins-noise-cancellation>=0.2.0",
     "livekit-plugins-sarvam",
+    "composio-livekit==0.7.20",
     "python-dotenv>=1.0.0",
     "pydantic>=2.0.0",
     "pyyaml>=6.0.0",

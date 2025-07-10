@@ -95,6 +95,7 @@ class InstructionTemplate:
             "context": config.initial_context,
             "tools": tools,
             "memory_enabled": config.memory_config.enabled,
+            "rag_enabled": config.rag_config.enabled,
             "now": now,
         }
 

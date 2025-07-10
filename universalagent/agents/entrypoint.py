@@ -18,13 +18,10 @@ from livekit.agents import AgentSession, RoomInputOptions, JobContext, mcp
 from livekit.agents import BackgroundAudioPlayer, AudioConfig, BuiltinAudioClip
 from livekit.agents import metrics, MetricsCollectedEvent
 from livekit.agents import JobProcess
-
-
-# Import optional noise cancellation
 from livekit.plugins import noise_cancellation, silero
+
 from universalagent.tools.memory.memory_management_tools import MemoryManagementTool
 from universalagent.transcripts.models import TranscriptMetadata
-
 from universalagent.core.config import AgentConfig
 from universalagent.core.config_loader import load_config_by_id, load_config_from_supabase
 from universalagent.components.factory import ComponentFactory, ComponentCreationError
@@ -33,6 +30,8 @@ from universalagent.tools.built_in_tools import BUILT_IN_TOOLS
 from universalagent.tools.knowledge.rag_tool import LlamaIndexPineconeRagTool, RAGToolConfig
 from universalagent.tools.tool_holder import ToolHolder
 from universalagent.agents.metadata import CallMetadata
+
+from composio_livekit import Action, ComposioToolSet
 
 from mem0 import AsyncMemoryClient
 
@@ -286,6 +285,14 @@ def initialize_tools(
     if config.memory_config and config.memory_config.enabled and memory_tool is not None:
         logger.info(f"Initializing memory management tool for customer: {meta.customer_id}")
         tools.extend(memory_tool.get_memory_management_tools())
+
+    # Add composio tools
+    toolset = ComposioToolSet()
+    composio_tools = toolset.get_tools(
+        apps=["GOOGLECALENDAR"],
+    )
+    logger.info(f"Found {len(composio_tools)} composio tools")
+    tools.extend(ToolHolder(tool) for tool in composio_tools)
 
     return tools
 
