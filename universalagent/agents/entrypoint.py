@@ -33,6 +33,8 @@ from universalagent.agents.metadata import CallMetadata
 
 from composio_livekit import Action, ComposioToolSet
 
+from universalagent.agents.livekit_mcp import CustomMCPServerHTTP
+
 from mem0 import AsyncMemoryClient
 
 logger = logging.getLogger(__name__)
@@ -157,7 +159,7 @@ async def start_agent_session(ctx: JobContext, config: AgentConfig, meta: CallMe
         }
 
         # create mcp servers
-        mcp_servers = [mcp.MCPServerHTTP(url=mcp_server.url, headers=mcp_server.headers) for mcp_server in config.mcp_servers]
+        mcp_servers = [CustomMCPServerHTTP(url=mcp_server.url, headers=mcp_server.headers) for mcp_server in config.mcp_servers]
 
         # Create AgentSession
         session = AgentSession(
@@ -266,6 +268,14 @@ def initialize_tools(
     tools.extend(BUILT_IN_TOOLS["call_management"])
     tools.extend(BUILT_IN_TOOLS["time_management"])
 
+    
+    def present_url(url: str) -> str:
+        """Use this tool to present a URL to the user."""
+        return f"Presenting URL: {url}"
+    
+    present_url_tool = ToolHolder(present_url)
+    tools.append(present_url_tool)
+
     # Add RAG tool
     if config.rag_config and config.rag_config.enabled:
         logger.info(f"Initializing RAG tool")
@@ -286,13 +296,11 @@ def initialize_tools(
         logger.info(f"Initializing memory management tool for customer: {meta.customer_id}")
         tools.extend(memory_tool.get_memory_management_tools())
 
-    # Add composio tools
-    toolset = ComposioToolSet()
-    composio_tools = toolset.get_tools(
-        apps=["GOOGLECALENDAR"],
-    )
-    logger.info(f"Found {len(composio_tools)} composio tools")
-    tools.extend(ToolHolder(tool) for tool in composio_tools)
+    # # Add composio tools
+    # toolset = ComposioToolSet()
+    # composio_tools = toolset.get_tools(actions=["CAL_POST_NEW_BOOKING_REQUEST"], entity_id="27a97e53-a3ad-44b8-975e-f192557504d4_1")
+    # logger.info(f"Found {len(composio_tools)} composio tools")
+    # tools.extend(ToolHolder(tool) for tool in composio_tools)
 
     return tools
 

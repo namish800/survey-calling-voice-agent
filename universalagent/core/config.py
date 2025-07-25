@@ -162,17 +162,23 @@ class MemoryConfig:
             raise ValueError("summarize_threshold must be >= max_history")
 
 
+# @dataclass
+# class ToolConfig:
+#     """Configuration for individual tools."""
+#     id: str
+#     name: str
+#     enabled: bool = True
+#     async_execution: bool = False
+#     description: Optional[str] = None
+#     type: ToolType = ToolType.DEFAULT
+#     api_spec: Optional[ApiSpec] = None
+
 @dataclass
 class ToolConfig:
     """Configuration for individual tools."""
-
-    id: str
-    name: str
-    enabled: bool = True
-    async_execution: bool = False
-    description: Optional[str] = None
-    type: ToolType = ToolType.DEFAULT
-    api_spec: Optional[ApiSpec] = None
+    tool_id: str
+    parameters: Dict[str, Any]
+    composio_connected_account_id: str
 
 
 @dataclass
@@ -284,7 +290,7 @@ class AgentConfig:
             raise ValueError("max_conversation_duration must be at least 30 seconds")
 
         # Validate tool names are unique
-        tool_names = [tool.name for tool in self.tools]
+        tool_names = [tool.tool_id for tool in self.tools]
         if len(tool_names) != len(set(tool_names)):
             raise ValueError("Tool names must be unique")
 
