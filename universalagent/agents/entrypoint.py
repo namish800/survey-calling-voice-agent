@@ -11,10 +11,12 @@ import json
 import logging
 from typing import List, Optional, Dict, Any, Callable
 
+from tools.rpc_tools.tools import present_url_tool
+
 from universalagent.agents.handler.silencetimeouthandler import SilenceTimeoutHandler
 from universalagent.events.event_sender import EventSender
 from livekit import agents
-from livekit.agents import AgentSession, RoomInputOptions, JobContext, mcp
+from livekit.agents import AgentSession, RoomInputOptions, JobContext, mcp, get_job_context, RunContext
 from livekit.agents import BackgroundAudioPlayer, AudioConfig, BuiltinAudioClip
 from livekit.agents import metrics, MetricsCollectedEvent
 from livekit.agents import JobProcess
@@ -268,13 +270,9 @@ def initialize_tools(
     tools.extend(BUILT_IN_TOOLS["call_management"])
     tools.extend(BUILT_IN_TOOLS["time_management"])
 
-    
-    def present_url(url: str) -> str:
-        """Use this tool to present a URL to the user."""
-        return f"Presenting URL: {url}"
-    
-    present_url_tool = ToolHolder(present_url)
     tools.append(present_url_tool)
+
+    # tools.append(generic_rpc_tool)
 
     # Add RAG tool
     if config.rag_config and config.rag_config.enabled:
