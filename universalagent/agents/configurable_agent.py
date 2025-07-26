@@ -61,21 +61,22 @@ class ConfigurableAgent(Agent):
     async def on_enter(self) -> None:
         """Handle initial greeting for the agent."""
         # Get first message or greeting instructions
-        first_message = self.config.first_message
-        greeting_instructions = self.config.greeting_instructions
+        # first_message = self.config.first_message
+        # greeting_instructions = self.config.greeting_instructions
+        await self.session.generate_reply(instructions="speak in hindi")
 
-        if first_message:
-            logger.info(f"Generating first message: {first_message}")
-            await self.session.say(first_message)
-        elif greeting_instructions:
-            logger.info(f"Generating greeting with instructions: {greeting_instructions}")
-            await self.session.generate_reply(instructions=greeting_instructions)
-        else:
-            # Default greeting
-            logger.info("Generating default greeting")
-            await self.session.generate_reply(
-                instructions="Greet the user warmly and offer your assistance."
-            )
+        # if first_message:
+        #     logger.info(f"Generating first message: {first_message}")
+        #     await self.session.say(first_message)
+        # elif greeting_instructions:
+        #     logger.info(f"Generating greeting with instructions: {greeting_instructions}")
+        #     await self.session.generate_reply(instructions=greeting_instructions)
+        # else:
+        #     # Default greeting
+        #     logger.info("Generating default greeting")
+        #     await self.session.generate_reply(
+        #         instructions="Greet the user warmly and offer your assistance."
+        #     )
 
     def __str__(self) -> str:
         """String representation of the agent."""

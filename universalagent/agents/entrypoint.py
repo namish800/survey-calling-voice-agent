@@ -267,7 +267,7 @@ def initialize_tools(
     """Initialize tools based on configuration."""
     tools = []
     # Add all the built-in tools
-    tools.extend(BUILT_IN_TOOLS["call_management"])
+    # tools.extend(BUILT_IN_TOOLS["call_management"])
     tools.extend(BUILT_IN_TOOLS["time_management"])
 
     tools.append(present_url_tool)

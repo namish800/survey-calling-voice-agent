@@ -93,9 +93,23 @@ generic_rpc_tool = ToolHolder(
     usage_instructions_llm="Use this tool to send custom RPC calls to the frontend. Specify the method name and provide a JSON string as payload. This is for advanced frontend interactions beyond URL presentation."
 )
 
+description="""Present data to the user via RPC call to the frontend.
+    
+    Args:
+        title: Title for the URL presentation
+        data: The message to present
+        description: Optional description.
+        
+    Returns:
+        Confirmation message
+
+    eg. If user needs to login to a website, you can use this tool to present the login page to the user.
+"""
+
 present_url_tool = ToolHolder(
-    present_url, 
-    usage_instructions_llm="Use this tool to show URLs to users in their frontend interface. Provide a clear title and description to help users understand what the URL is for. This is especially useful for forms, documents, or external resources that users need to access."
+    present_url,
+    name="present_data",
+    description=description
 )
 
 
